@@ -1,0 +1,10 @@
+{% block sw_customer_detail_content_tab_general %}
+    {% parent %}
+
+    <sw-tabs-item
+            v-if="customer"
+            :route="{ name: 'sw.customer.detail.moorl.cs-session' }"
+    >
+        {{ $tc('global.entities.moorl_cs_relation') }}
+    </sw-tabs-item>
+{% endblock %}

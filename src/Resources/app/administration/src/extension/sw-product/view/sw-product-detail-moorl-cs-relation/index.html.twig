@@ -1,0 +1,12 @@
+<div class="sw-product-detail-moorl-cs-relation">
+    <div v-if="isLoading">
+        <sw-skeleton />
+        <sw-skeleton />
+    </div>
+
+    <moorl-entity-grid-card-v2
+            v-if="product.id && !isLoading"
+            entity="moorl_cs_relation"
+            :default-item="{ productId: product.id, taxId: product.taxId }"
+    />
+</div>

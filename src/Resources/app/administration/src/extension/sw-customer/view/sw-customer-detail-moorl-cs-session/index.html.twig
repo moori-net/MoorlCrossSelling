@@ -1,0 +1,12 @@
+<div class="sw-customer-detail-moorl-cs-relation">
+    <div v-if="isLoading">
+        <sw-skeleton />
+        <sw-skeleton />
+    </div>
+
+    <moorl-entity-grid-card-v2
+            v-if="!isLoading"
+            entity="moorl_cs_relation"
+            :default-item="{ customerId: customer.id }"
+    />
+</div>

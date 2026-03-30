@@ -1,0 +1,41 @@
+{
+    "name": "moorl/cross-selling",
+    "description": "Custom product prices",
+    "version": "1.7.2",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "moori"
+        }
+    ],
+    "require": {
+        "shopware/core": "~6.7.0",
+        "moorl/foundation": "~1.7.55"
+    },
+    "type": "shopware-platform-plugin",
+    "autoload": {
+        "psr-4": {
+            "MoorlCrossSelling\\": "src/"
+        }
+    },
+    "extra": {
+        "shopware-plugin-class": "MoorlCrossSelling\\MoorlCrossSelling",
+        "copyright": "(c) by moori",
+        "label": {
+            "de-DE": "Kundenspezifische Produktpreise",
+            "en-GB": "Custom product prices"
+        },
+        "description": {
+            "de-DE": "Dieses einfache und benutzerfreundliche Plugin ermöglicht es, Produktpreise gezielt für unterschiedliche Kunden anzupassen - So lassen sich flexible Preisgestaltungen realisieren.",
+            "en-GB": "This simple and user-friendly plugin allows you to adjust product prices specifically for different customers - This allows for flexible pricing structures."
+        },
+        "manufacturerLink": {
+            "de-DE": "https://docs.moori.net/",
+            "en-GB": "https://docs.moori.net/"
+        },
+        "supportLink": {
+            "de-DE": "https://docs.moori.net/",
+            "en-GB": "https://docs.moori.net/"
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "moorl-cross-selling": {
+        "type": {
+            "seen": "Last seen products",
+            "similar": "Similar products",
+            "bought": "Customers bought also",
+            "custom": "Custom"
+        }
+    }
+}
