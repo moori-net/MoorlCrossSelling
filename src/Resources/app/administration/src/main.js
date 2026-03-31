@@ -22,5 +22,3 @@ onMoorlFoundationReady(() => {
         cmsElements: []
     });
 });
-
-import './extension';

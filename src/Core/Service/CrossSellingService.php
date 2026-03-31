@@ -350,7 +350,6 @@ class CrossSellingService
     {
         $productIds = array_values(array_unique($productIds));
         $count = count($productIds);
-
         if ($count < 2) {
             return;
         }

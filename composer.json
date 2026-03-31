@@ -22,12 +22,12 @@
         "shopware-plugin-class": "MoorlCrossSelling\\MoorlCrossSelling",
         "copyright": "(c) by moori",
         "label": {
-            "de-DE": "Kundenspezifische Produktpreise",
-            "en-GB": "Custom product prices"
+            "de-DE": "Automatisches Cross-Selling",
+            "en-GB": "Automatic cross-selling"
         },
         "description": {
-            "de-DE": "Dieses einfache und benutzerfreundliche Plugin ermöglicht es, Produktpreise gezielt für unterschiedliche Kunden anzupassen - So lassen sich flexible Preisgestaltungen realisieren.",
-            "en-GB": "This simple and user-friendly plugin allows you to adjust product prices specifically for different customers - This allows for flexible pricing structures."
+            "de-DE": "Dieses Plugin erfasst Seitenaufrufe auf Produktseiten und Bestellungen. Auf Grundlage der gesammelten Daten werden automatisch Cross-Selling-Listen erstellt.",
+            "en-GB": "This simple plugin tracks product page views and placed orders. Cross-selling lists and view histories are automatically generated based on the collected data."
         },
         "manufacturerLink": {
             "de-DE": "https://docs.moori.net/",
