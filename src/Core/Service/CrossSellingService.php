@@ -21,7 +21,6 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\OrFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\RangeFilter;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\IdSearchResult;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -30,7 +29,7 @@ use Shopware\Core\System\SystemConfig\SystemConfigService;
 class CrossSellingService
 {
     private const ORDER_PROCESSED = 'moorl_cross_selling_processed';
-    private const MIN_AGE = '-1 seconds';
+    private const MIN_AGE = '-24 hours';
     private const LIMIT = 10;
 
     public function __construct(
@@ -47,21 +46,17 @@ class CrossSellingService
     {
     }
 
-    public function updateProductsTask(Context $context, int $page = 1): IdSearchResult
+    public function updateProductsTask(Context $context, int $page = 1): int
     {
         $offset = ($page - 1) * self::LIMIT;
-
         $criteria = new Criteria();
         $criteria->setLimit(self::LIMIT);
         $criteria->setOffset($offset);
-
         $idSearchResult = $this->productRepository->searchIds($criteria, $context);
-
         foreach ($idSearchResult->getIds() as $productId) {
             $this->updateProduct($productId, $context);
         }
-
-        return $idSearchResult;
+        return $idSearchResult->getTotal();
     }
 
     public function updateProduct(string $productId, Context $context): void
@@ -85,11 +80,7 @@ class CrossSellingService
 
             $crossSellingRelations = $this->crossSellingRelationRepository->search($criteria, $context)->getEntities();
 
-            if (!$crossSellingRelations instanceof CrossSellingRelationCollection) {
-                continue;
-            }
-
-            if ($crossSellingRelations->count() === 0) {
+            if (!$crossSellingRelations instanceof CrossSellingRelationCollection || $crossSellingRelations->count() === 0) {
                 continue;
             }
 
@@ -118,7 +109,6 @@ class CrossSellingService
         $criteria->setTotalCountMode(Criteria::TOTAL_COUNT_MODE_EXACT);
         $criteria->addFilter(new RangeFilter('createdAt', [RangeFilter::LTE => $createdAt]));
         $criteria->addFilter(new EqualsFilter('processed', false));
-
         return $criteria;
     }
 
@@ -129,11 +119,10 @@ class CrossSellingService
         $criteria->addFilter(new NotFilter(MultiFilter::CONNECTION_OR, [
             new EqualsFilter('customFields.' . self::ORDER_PROCESSED, 1)
         ]));
-
         return $criteria;
     }
 
-    public function createRelationsFromSessionTask(Context $context): IdSearchResult
+    public function createRelationsFromSessionTask(Context $context): int
     {
         $idSearchResult = $this->crossSellingSessionRepository->searchIds(
             $this->relationsFromSessionCriteria(),
@@ -142,8 +131,7 @@ class CrossSellingService
         foreach ($idSearchResult->getIds() as $sessionId) {
             $this->createRelationsFromSession($sessionId, $context);
         }
-
-        return $idSearchResult;
+        return $idSearchResult->getTotal();
     }
 
     public function countProducts(Context $context): int
@@ -170,7 +158,7 @@ class CrossSellingService
         return $aggregation instanceof CountResult ? $aggregation->getCount() : 0;
     }
 
-    public function createRelationsFromOrderTask(Context $context): IdSearchResult
+    public function createRelationsFromOrderTask(Context $context): int
     {
         $idSearchResult = $this->orderRepository->searchIds(
             $this->relationsFromOrderCriteria(),
@@ -179,8 +167,7 @@ class CrossSellingService
         foreach ($idSearchResult->getIds() as $orderId) {
             $this->createRelationsFromOrder($orderId, $context);
         }
-
-        return $idSearchResult;
+        return $idSearchResult->getTotal();
     }
 
     public function addSeenProduct(string $productId, SalesChannelContext $salesChannelContext): void

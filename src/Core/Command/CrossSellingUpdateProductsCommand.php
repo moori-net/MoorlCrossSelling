@@ -39,12 +39,9 @@ class CrossSellingUpdateProductsCommand extends Command
         $page = 0;
         do {
             $page++;
-            $idSearchResult = $this->crossSellingService->updateProductsTask(
-                $context,
-                $page
-            );
-            $progressBar->advance(\count($idSearchResult->getIds()));
-        } while (\count($idSearchResult->getIds()));
+            $step = $this->crossSellingService->updateProductsTask($context, $page);
+            $progressBar->advance($step);
+        } while ($step);
         $progressBar->finish();
         $io->newLine(3);
         $io->success(sprintf('Successfully updated %d products.', $count));
