@@ -31,5 +31,8 @@ class ProductSubscriber implements EventSubscriberInterface
 
     public function onProductIndexer(ProductIndexerEvent $event): void
     {
+        foreach ($event->getIds() as $productId) {
+            $this->crossSellingService->updateProduct($productId, $event->getContext());
+        }
     }
 }

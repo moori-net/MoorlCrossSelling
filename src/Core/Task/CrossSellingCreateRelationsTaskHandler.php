@@ -4,7 +4,6 @@ namespace MoorlCrossSelling\Core\Task;
 
 use MoorlCrossSelling\Core\Service\CrossSellingService;
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Api\Context\SystemSource;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\MessageQueue\ScheduledTask\ScheduledTaskHandler;
@@ -24,6 +23,9 @@ class CrossSellingCreateRelationsTaskHandler extends ScheduledTaskHandler
 
     public function run(): void
     {
-        $this->crossSellingService->createRelationsTask(new Context(new SystemSource()));
+        $context = Context::createCLIContext();
+
+        $this->crossSellingService->createRelationsFromSessionTask($context);
+        $this->crossSellingService->createRelationsFromOrderTask($context);
     }
 }

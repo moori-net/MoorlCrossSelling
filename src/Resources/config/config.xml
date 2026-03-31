@@ -12,18 +12,40 @@
             <defaultValue>true</defaultValue>
         </input-field>
 
-        <input-field type="bool">
-            <name>mergeAll</name>
-            <label>Merge all cross-selling lists</label>
-            <label lang="de-DE">Alle Cross-Selling-Listen zusammenführen</label>
-            <defaultValue>false</defaultValue>
-        </input-field>
-
         <input-field type="int">
             <name>itemLimit</name>
             <label>Item limit per cross-selling list</label>
             <label lang="de-DE">Artikelbegrenzung pro Cross-Selling-Liste</label>
             <defaultValue>12</defaultValue>
         </input-field>
+    </card>
+
+    <card>
+        <title>Translations</title>
+        <title lang="de-DE">Übersetzungen</title>
+
+        <component name="moorl-translated-text-field">
+            <name>bought</name>
+            <label>Frequently bought together</label>
+            <label lang="de-DE">Häufig zusammen gekauft</label>
+            <placeholder>Frequently bought together</placeholder>
+            <placeholder lang="de-DE">Häufig zusammen gekauft</placeholder>
+        </component>
+
+        <component name="moorl-translated-text-field">
+            <name>viewed</name>
+            <label>Frequently viewed together</label>
+            <label lang="de-DE">Häufig zusammen angesehen</label>
+            <placeholder>Frequently viewed together</placeholder>
+            <placeholder lang="de-DE">Häufig zusammen angesehen</placeholder>
+        </component>
+
+        <component name="moorl-translated-text-field">
+            <name>seen</name>
+            <label>Recently viewed</label>
+            <label lang="de-DE">Zuletzt angesehen</label>
+            <placeholder>Recently viewed</placeholder>
+            <placeholder lang="de-DE">Zuletzt angesehen</placeholder>
+        </component>
     </card>
 </config>

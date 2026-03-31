@@ -30,7 +30,18 @@ class CrossSellingService
 {
     private const ORDER_PROCESSED = 'moorl_cross_selling_processed';
     private const MIN_AGE = '-24 hours';
-    private const LIMIT = 10;
+    private const LIMIT = 25;
+    private const FALLBACK_TRANSLATIONS = [
+        CrossSellingRelationDefinition::TYPE_BOUGHT => 'Frequently bought together',
+        CrossSellingRelationDefinition::TYPE_VIEWED => 'Frequently viewed together',
+        CrossSellingRelationDefinition::TYPE_SEEN => 'Recently viewed',
+        CrossSellingRelationDefinition::TYPE_SIMILAR => 'Similar products',
+        CrossSellingRelationDefinition::TYPE_CUSTOM => 'To go with this',
+    ];
+    public const FORCE_UPDATE_STATE = 'force_update';
+    public const TRUNCATE_TABLE_STATE = 'truncate_table';
+
+    private array $productCrossSellingTranslations = [];
 
     public function __construct(
         private readonly SystemConfigService $systemConfigService,
@@ -46,12 +57,53 @@ class CrossSellingService
     {
     }
 
+    public function createRelationsFromSessionTask(Context $context, int $page = 1): int
+    {
+        $this->truncateTable(
+            $context,
+            $page,
+            CrossSellingRelationDefinition::ENTITY_NAME,
+            CrossSellingRelationDefinition::TYPE_VIEWED
+        );
+
+        $idSearchResult = $this->crossSellingSessionRepository->searchIds(
+            $this->relationsFromSessionCriteria($context, $page),
+            $context
+        );
+        foreach ($idSearchResult->getIds() as $sessionId) {
+            $this->createRelationsFromSession($sessionId, $context);
+        }
+        return $idSearchResult->getTotal();
+    }
+
+    public function createRelationsFromOrderTask(Context $context, int $page = 1): int
+    {
+        $this->truncateTable(
+            $context,
+            $page,
+            CrossSellingRelationDefinition::ENTITY_NAME,
+            CrossSellingRelationDefinition::TYPE_BOUGHT
+        );
+
+        $idSearchResult = $this->orderRepository->searchIds(
+            $this->relationsFromOrderCriteria($context, $page),
+            $context
+        );
+        foreach ($idSearchResult->getIds() as $orderId) {
+            $this->createRelationsFromOrder($orderId, $context);
+        }
+        return $idSearchResult->getTotal();
+    }
+
     public function updateProductsTask(Context $context, int $page = 1): int
     {
-        $offset = ($page - 1) * self::LIMIT;
-        $criteria = new Criteria();
-        $criteria->setLimit(self::LIMIT);
-        $criteria->setOffset($offset);
+        $this->truncateTable(
+            $context,
+            $page,
+            ProductCrossSellingDefinition::ENTITY_NAME
+        );
+
+        $criteria = $this->getPaginatedCriteria($page);
         $idSearchResult = $this->productRepository->searchIds($criteria, $context);
         foreach ($idSearchResult->getIds() as $productId) {
             $this->updateProduct($productId, $context);
@@ -64,7 +116,7 @@ class CrossSellingService
         $itemLimit = $this->systemConfigService->getInt('MoorlCrossSelling.config.itemLimit');
 
         $types = [
-            CrossSellingRelationDefinition::TYPE_SEEN,
+            CrossSellingRelationDefinition::TYPE_VIEWED,
             CrossSellingRelationDefinition::TYPE_BOUGHT,
         ];
 
@@ -79,7 +131,6 @@ class CrossSellingService
             $criteria->addSorting(new FieldSorting('score', FieldSorting::DESCENDING));
 
             $crossSellingRelations = $this->crossSellingRelationRepository->search($criteria, $context)->getEntities();
-
             if (!$crossSellingRelations instanceof CrossSellingRelationCollection || $crossSellingRelations->count() === 0) {
                 continue;
             }
@@ -92,46 +143,67 @@ class CrossSellingService
                 'active' => true,
                 'type' => ProductCrossSellingDefinition::TYPE_PRODUCT_LIST,
                 'assignedProducts' => $crossSellingRelations->fetchAssignedProductsPayload($productId),
-                'name' => $type
+                'translations' => $this->getProductCrossSellingTranslations($type),
             ];
 
             $this->productCrossSellingRepository->upsert([$payload], $context);
         }
     }
 
-    public function relationsFromSessionCriteria(): Criteria
+    private function getProductCrossSellingTranslations(string $type): array
     {
-        $createdAt = (new \DateTimeImmutable())
-            ->modify(self::MIN_AGE)
-            ->format(Defaults::STORAGE_DATE_TIME_FORMAT);
-        $criteria = new Criteria();
-        $criteria->setLimit(self::LIMIT);
-        $criteria->setTotalCountMode(Criteria::TOTAL_COUNT_MODE_EXACT);
-        $criteria->addFilter(new RangeFilter('createdAt', [RangeFilter::LTE => $createdAt]));
-        $criteria->addFilter(new EqualsFilter('processed', false));
-        return $criteria;
-    }
-
-    public function relationsFromOrderCriteria(): Criteria
-    {
-        $criteria = new Criteria();
-        $criteria->setLimit(self::LIMIT);
-        $criteria->addFilter(new NotFilter(MultiFilter::CONNECTION_OR, [
-            new EqualsFilter('customFields.' . self::ORDER_PROCESSED, 1)
-        ]));
-        return $criteria;
-    }
-
-    public function createRelationsFromSessionTask(Context $context): int
-    {
-        $idSearchResult = $this->crossSellingSessionRepository->searchIds(
-            $this->relationsFromSessionCriteria(),
-            $context
-        );
-        foreach ($idSearchResult->getIds() as $sessionId) {
-            $this->createRelationsFromSession($sessionId, $context);
+        if (isset($this->productCrossSellingTranslations[$type])) {
+            return $this->productCrossSellingTranslations[$type];
         }
-        return $idSearchResult->getTotal();
+
+        $config = $this->systemConfigService->get('MoorlCrossSelling.config.' . $type);
+
+        if (!isset($config[Defaults::LANGUAGE_SYSTEM]) || empty($config[Defaults::LANGUAGE_SYSTEM])) {
+            $config[Defaults::LANGUAGE_SYSTEM] = self::FALLBACK_TRANSLATIONS[$type];
+        }
+
+        $this->productCrossSellingTranslations[$type] = [];
+
+        foreach ($config as $languageId => $value) {
+            if (!Uuid::isValid($languageId) || empty($value)) {
+                continue;
+            }
+
+            $this->productCrossSellingTranslations[$type][$languageId] = ['name' => $value];
+        }
+
+        return $this->productCrossSellingTranslations[$type];
+    }
+
+    private function relationsFromSessionCriteria(Context $context, int $page = 1): Criteria
+    {
+        if (!$context->hasState(self::FORCE_UPDATE_STATE)) {
+            $criteria = $this->getPaginatedCriteria();
+            $createdAt = (new \DateTimeImmutable())
+                ->modify(self::MIN_AGE)
+                ->format(Defaults::STORAGE_DATE_TIME_FORMAT);
+
+            $criteria->addFilter(new RangeFilter('createdAt', [RangeFilter::LTE => $createdAt]));
+            $criteria->addFilter(new EqualsFilter('processed', false));
+        } else {
+            $criteria = $this->getPaginatedCriteria($page);
+        }
+
+        return $criteria;
+    }
+
+    private function relationsFromOrderCriteria(Context $context, int $page = 1): Criteria
+    {
+        if (!$context->hasState(self::FORCE_UPDATE_STATE)) {
+            $criteria = $this->getPaginatedCriteria();
+            $criteria->addFilter(new NotFilter(MultiFilter::CONNECTION_OR, [
+                new EqualsFilter('customFields.' . self::ORDER_PROCESSED, 1)
+            ]));
+        } else {
+            $criteria = $this->getPaginatedCriteria($page);
+        }
+
+        return $criteria;
     }
 
     public function countProducts(Context $context): int
@@ -144,7 +216,7 @@ class CrossSellingService
 
     public function countRelationsFromSession(Context $context): int
     {
-        $criteria = $this->relationsFromSessionCriteria();
+        $criteria = $this->relationsFromSessionCriteria($context);
         $criteria->addAggregation(new CountAggregation('count', 'id'));
         $aggregation = $this->crossSellingSessionRepository->aggregate($criteria, $context)->get('count');
         return $aggregation instanceof CountResult ? $aggregation->getCount() : 0;
@@ -152,22 +224,10 @@ class CrossSellingService
 
     public function countRelationsFromOrder(Context $context): int
     {
-        $criteria = $this->relationsFromOrderCriteria();
+        $criteria = $this->relationsFromOrderCriteria($context);
         $criteria->addAggregation(new CountAggregation('count', 'id'));
         $aggregation = $this->orderRepository->aggregate($criteria, $context)->get('count');
         return $aggregation instanceof CountResult ? $aggregation->getCount() : 0;
-    }
-
-    public function createRelationsFromOrderTask(Context $context): int
-    {
-        $idSearchResult = $this->orderRepository->searchIds(
-            $this->relationsFromOrderCriteria(),
-            $context
-        );
-        foreach ($idSearchResult->getIds() as $orderId) {
-            $this->createRelationsFromOrder($orderId, $context);
-        }
-        return $idSearchResult->getTotal();
     }
 
     public function addSeenProduct(string $productId, SalesChannelContext $salesChannelContext): void
@@ -214,11 +274,9 @@ class CrossSellingService
     public function createRelationsFromSession(string $sessionId, Context $context): void
     {
         $criteria = new Criteria([$sessionId]);
-        $criteria->addFilter(new EqualsFilter('processed', false));
         $criteria->addAssociation('sessionProducts');
 
         $session = $this->crossSellingSessionRepository->search($criteria, $context)->first();
-
         if (!$session instanceof CrossSellingSessionEntity) {
             $this->logger->warning(sprintf('Session with ID %s not found', $sessionId));
             return;
@@ -236,7 +294,7 @@ class CrossSellingService
 
         $this->createRelations(
             $productIds,
-            CrossSellingRelationDefinition::TYPE_SEEN,
+            CrossSellingRelationDefinition::TYPE_VIEWED,
             $session->getSalesChannelId(),
             $context
         );
@@ -253,14 +311,8 @@ class CrossSellingService
         $criteria->addAssociation('lineItems');
 
         $order = $this->orderRepository->search($criteria, $context)->first();
-
         if (!$order instanceof OrderEntity) {
             $this->logger->warning(sprintf('Order with ID %s not found', $orderId));
-            return;
-        }
-
-        if ($order->getCustomFieldsValue(self::ORDER_PROCESSED)) {
-            $this->logger->debug(sprintf('Order with ID %s skipped', $orderId));
             return;
         }
 
@@ -289,7 +341,7 @@ class CrossSellingService
         ]], $context);
     }
 
-    public function createRelations(
+    private function createRelations(
         array $productIds,
         string $type,
         string $salesChannelId,
@@ -316,7 +368,7 @@ class CrossSellingService
         }
     }
 
-    public function createRelation(
+    private function createRelation(
         string $productAId,
         string $productBId,
         string $type,
@@ -362,7 +414,6 @@ class CrossSellingService
     private function getOrCreateActiveSession(SalesChannelContext $salesChannelContext): CrossSellingSessionEntity
     {
         $session = $this->getActiveSession($salesChannelContext);
-
         if ($session instanceof CrossSellingSessionEntity) {
             return $session;
         }
@@ -396,30 +447,26 @@ class CrossSellingService
         }
 
         $session = $this->crossSellingSessionRepository->search($criteria, $salesChannelContext->getContext())->first();
-
         return $session instanceof CrossSellingSessionEntity ? $session : null;
     }
 
-    private function getSessionProductIds(string $sessionId, Context $context): array
+    private function getPaginatedCriteria(int $page = 1): Criteria
     {
         $criteria = new Criteria();
-        $criteria->addFilter(new EqualsFilter('sessionId', $sessionId));
-        $criteria->addSorting(new FieldSorting('lastVisit', FieldSorting::DESCENDING));
+        $criteria->setLimit(self::LIMIT);
+        $criteria->setOffset(($page - 1) * self::LIMIT);
 
-        $sessionProducts = $this->crossSellingSessionProductRepository->search($criteria, $context)->getEntities();
+        return $criteria;
+    }
 
-        $productIds = [];
+    private function truncateTable(Context $context, int $page, string $entity, ?string $type = null): void
+    {
+        if ($page === 1 && $context->hasState(self::TRUNCATE_TABLE_STATE)) {
+            $sql = $type ?
+                sprintf("DELETE FROM `%s` WHERE `type` = '%s';", $entity, $type) :
+                sprintf("DELETE FROM `%s`;", $entity);
 
-        foreach ($sessionProducts as $sessionProduct) {
-            $productId = $sessionProduct->get('productId');
-
-            if (!$productId) {
-                continue;
-            }
-
-            $productIds[] = $productId;
+            $this->connection->executeStatement($sql);
         }
-
-        return array_values(array_unique($productIds));
     }
 }
