@@ -22,11 +22,12 @@ class CrossSellingRelationCollection extends EntityCollection
 
         foreach ($this->getElements() as $entity) {
             $relatedProductId = $entity->getProductAId() === $productId ? $entity->getProductBId() : $entity->getProductAId();
+            $position++;
 
             $payload[] = [
                 'id' => md5(sprintf("%s|%s|%s", $entity->getType(), $productId, $relatedProductId)),
                 'productId' => $relatedProductId,
-                'position' => $position++
+                'position' => $position
             ];
         }
 

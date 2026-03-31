@@ -1,0 +1,9 @@
+{
+    "global": {
+        "entities": {
+            "moorl_cs_relation": "Related products",
+            "moorl_cs_session": "Sessions",
+            "moorl_cs_session_product": "Product visitor counter"
+        }
+    }
+}
