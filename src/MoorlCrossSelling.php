@@ -12,7 +12,11 @@ class MoorlCrossSelling extends Plugin
 {
     final public const NAME = 'MoorlCrossSelling';
     final public const DATA_CREATED_AT = '2026-03-29 00:00:00.000';
-    final public const PLUGIN_TABLES = ['moorl_cross_selling'];
+    final public const PLUGIN_TABLES = [
+        'moorl_cs_relation',
+        'moorl_cs_session',
+        'moorl_cs_session_product',
+    ];
     final public const SHOPWARE_TABLES = [];
 
     public function activate(ActivateContext $activateContext): void

@@ -11,5 +11,12 @@
             <label lang="de-DE">Aktiv</label>
             <defaultValue>true</defaultValue>
         </input-field>
+
+        <input-field type="bool">
+            <name>mergeAll</name>
+            <label>Merge all lists</label>
+            <label lang="de-DE">Alle Listen zusammenführen</label>
+            <defaultValue>true</defaultValue>
+        </input-field>
     </card>
 </config>

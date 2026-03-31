@@ -13,7 +13,10 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\OrFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\RangeFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -33,6 +36,35 @@ class CrossSellingService
         private readonly LoggerInterface $logger
     )
     {
+    }
+
+    public function createRelationsTask(Context $context, int $limit = 100): void
+    {
+        $createdAt = (new \DateTimeImmutable())
+            ->modify('-24 hours')
+            ->format(Defaults::STORAGE_DATE_TIME_FORMAT);
+
+        $criteria = new Criteria();
+        $criteria->setLimit($limit);
+        $criteria->addFilter(new RangeFilter('createdAt', [RangeFilter::LTE => $createdAt]));
+        $criteria->addFilter(new NotFilter(MultiFilter::CONNECTION_OR, [
+            new EqualsFilter('customFields.' . self::ORDER_PROCESSED, 1)
+        ]));
+
+        $orderIds = $this->orderRepository->searchIds($criteria, $context)->getIds();
+        foreach ($orderIds as $orderId) {
+            $this->createRelationsFromOrder($orderId, $context);
+        }
+
+        $criteria = new Criteria();
+        $criteria->setLimit($limit);
+        $criteria->addFilter(new RangeFilter('createdAt', [RangeFilter::LTE => $createdAt]));
+        $criteria->addFilter(new EqualsFilter('processed', false));
+
+        $sessionIds = $this->crossSellingSessionRepository->searchIds($criteria, $context)->getIds();
+        foreach ($sessionIds as $sessionId) {
+            $this->createRelationsFromSession($sessionId, $context);
+        }
     }
 
     public function addSeenProduct(string $productId, SalesChannelContext $salesChannelContext): void
