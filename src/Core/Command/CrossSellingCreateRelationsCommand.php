@@ -2,7 +2,6 @@
 
 namespace MoorlCrossSelling\Core\Command;
 
-use Moorl\DevTools\Core\Migration\MigrationService;
 use MoorlCrossSelling\Core\Service\CrossSellingService;
 use Shopware\Core\Framework\Adapter\Console\ShopwareStyle;
 use Shopware\Core\Framework\Context;
