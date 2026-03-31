@@ -20,6 +20,16 @@ class CrossSellingSessionProductCollection extends EntityCollection
         return $this->map(fn(CrossSellingSessionProductEntity $entity) => $entity->getProductId());
     }
 
+    public function getByProductId(string $id): ?CrossSellingSessionProductEntity
+    {
+        foreach ($this->getElements() as $entity) {
+            if ($entity->getProductId() === $id) {
+                return $entity;
+            }
+        }
+        return null;
+    }
+
     protected function getExpectedClass(): string
     {
         return CrossSellingSessionProductEntity::class;

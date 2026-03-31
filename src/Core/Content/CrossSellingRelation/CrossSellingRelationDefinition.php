@@ -9,6 +9,8 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\FkField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\Required;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\IntField;
+use Shopware\Core\Framework\DataAbstractionLayer\Field\ManyToOneAssociationField;
+use Shopware\Core\Framework\DataAbstractionLayer\Field\ReferenceVersionField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\StringField;
 use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 use Shopware\Core\System\SalesChannel\SalesChannelDefinition;
@@ -42,9 +44,13 @@ class CrossSellingRelationDefinition extends EntityDefinition
             FieldEntityCollection::getFieldItems(localClass: self::class),
             [
                 (new FkField('product_a_id', 'productAId', ProductDefinition::class))->addFlags(new Required()),
+                (new ReferenceVersionField(ProductDefinition::class, 'product_a_version_id'))->addFlags(new Required()),
                 (new FkField('product_b_id', 'productBId', ProductDefinition::class))->addFlags(new Required()),
+                (new ReferenceVersionField(ProductDefinition::class, 'product_b_version_id'))->addFlags(new Required()),
                 (new StringField('type', 'type'))->addFlags(new Required()),
                 (new IntField('score', 'score'))->addFlags(),
+                (new ManyToOneAssociationField('productA', 'product_a_id', ProductDefinition::class))->addFlags(),
+                (new ManyToOneAssociationField('productB', 'product_b_id', ProductDefinition::class))->addFlags(),
             ],
             FieldMultiEntityCollection::getManyToOneFieldItems(
                 references: [

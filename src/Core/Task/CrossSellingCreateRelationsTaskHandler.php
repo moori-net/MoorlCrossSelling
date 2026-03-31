@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace MoorlFoundation\Core\Task;
+namespace MoorlCrossSelling\Core\Task;
 
 use MoorlCrossSelling\Core\Service\CrossSellingService;
 use Psr\Log\LoggerInterface;

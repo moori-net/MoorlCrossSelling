@@ -15,6 +15,24 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityCollection;
  */
 class CrossSellingRelationCollection extends EntityCollection
 {
+    public function fetchAssignedProductsPayload(string $productId): array
+    {
+        $payload = [];
+        $position = 0;
+
+        foreach ($this->getElements() as $entity) {
+            $relatedProductId = $entity->getProductAId() === $productId ? $entity->getProductBId() : $entity->getProductAId();
+
+            $payload[] = [
+                'id' => md5(sprintf("%s|%s|%s", $entity->getType(), $productId, $relatedProductId)),
+                'productId' => $relatedProductId,
+                'position' => $position++
+            ];
+        }
+
+        return $payload;
+    }
+
     protected function getExpectedClass(): string
     {
         return CrossSellingRelationEntity::class;

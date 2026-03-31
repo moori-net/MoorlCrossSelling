@@ -14,9 +14,16 @@
 
         <input-field type="bool">
             <name>mergeAll</name>
-            <label>Merge all lists</label>
-            <label lang="de-DE">Alle Listen zusammenführen</label>
-            <defaultValue>true</defaultValue>
+            <label>Merge all cross-selling lists</label>
+            <label lang="de-DE">Alle Cross-Selling-Listen zusammenführen</label>
+            <defaultValue>false</defaultValue>
+        </input-field>
+
+        <input-field type="int">
+            <name>itemLimit</name>
+            <label>Item limit per cross-selling list</label>
+            <label lang="de-DE">Artikelbegrenzung pro Cross-Selling-Liste</label>
+            <defaultValue>12</defaultValue>
         </input-field>
     </card>
 </config>

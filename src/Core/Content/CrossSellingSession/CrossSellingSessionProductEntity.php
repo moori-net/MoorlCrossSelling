@@ -11,6 +11,17 @@ class CrossSellingSessionProductEntity extends Entity
 
     protected string $productId = "";
     protected int $count = 0;
+    protected int $lastVisit = 0;
+
+    public function getLastVisit(): int
+    {
+        return $this->lastVisit;
+    }
+
+    public function setLastVisit(int $lastVisit): void
+    {
+        $this->lastVisit = $lastVisit;
+    }
 
     public function getProductId(): string
     {

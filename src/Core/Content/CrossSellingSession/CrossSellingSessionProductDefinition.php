@@ -36,7 +36,8 @@ class CrossSellingSessionProductDefinition extends EntityDefinition
         return new FieldCollection(array_merge(
             FieldEntityCollection::getFieldItems(localClass: self::class),
             [
-                (new IntField('count', 'count'))->addFlags()
+                (new IntField('count', 'count'))->addFlags(),
+                (new IntField('last_visit', 'lastVisit'))->addFlags(),
             ],
             FieldMultiEntityCollection::getManyToOneFieldItems(
                 references: [
