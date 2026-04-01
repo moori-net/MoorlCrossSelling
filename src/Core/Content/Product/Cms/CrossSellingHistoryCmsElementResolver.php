@@ -2,10 +2,10 @@
 
 namespace MoorlCrossSelling\Core\Content\Product\Cms;
 
+use MoorlCrossSelling\Core\Content\CrossSellingRelation\CrossSellingRelationDefinition;
 use MoorlCrossSelling\Core\Service\CrossSellingService;
 use Shopware\Core\Content\Cms\Aggregate\CmsSlot\CmsSlotEntity;
 use Shopware\Core\Content\Cms\DataResolver\CriteriaCollection;
-use Shopware\Core\Content\Cms\DataResolver\Element\ElementDataCollection;
 use Shopware\Core\Content\Cms\DataResolver\FieldConfig;
 use Shopware\Core\Content\Cms\DataResolver\ResolverContext\ResolverContext;
 use Shopware\Core\Content\Product\Cms\ProductSliderCmsElementResolver;
@@ -30,18 +30,22 @@ class CrossSellingHistoryCmsElementResolver extends ProductSliderCmsElementResol
     public function collect(CmsSlotEntity $slot, ResolverContext $resolverContext): ?CriteriaCollection
     {
         $config = $slot->getFieldConfig();
-        $productConfig = $config->get('products');
 
+        $productConfig = $config->get('products');
         $productConfig->assign([
             'source' => FieldConfig::SOURCE_STATIC,
             'value' => $this->crossSellingService->getProductHistoryIds($resolverContext->getSalesChannelContext()),
         ]);
 
-        return parent::collect($slot, $resolverContext);
-    }
+        $titleConfig = $config->get('title');
+        $titleConfig->assign([
+            'source' => FieldConfig::SOURCE_STATIC,
+            'value' => $this->crossSellingService->getProductCrossSellingTranslation(
+                CrossSellingRelationDefinition::TYPE_HISTORY,
+                $resolverContext->getSalesChannelContext()->getLanguageId()
+            ),
+        ]);
 
-    public function enrich(CmsSlotEntity $slot, ResolverContext $resolverContext, ElementDataCollection $result): void
-    {
-        parent::enrich($slot, $resolverContext, $result);
+        return parent::collect($slot, $resolverContext);
     }
 }

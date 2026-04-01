@@ -15,6 +15,7 @@
         "position": 0,
         "type": "default",
         "sizingMode": "full_width",
+        "backgroundColor": "",
         "backgroundMediaMode": "cover",
         "visibility": {
           "mobile": true,
@@ -24,12 +25,21 @@
         "id": "{ID:CMS_PAGE_WIDGET_SECTION_1}",
         "blocks": [
           {
-            "id": "{ID:CMS_PAGE_WIDGET_BLOCK_1}",
             "position": 0,
             "type": "product-slider",
+            "sectionPosition": "main",
+            "marginTop": "20px",
+            "marginBottom": "20px",
+            "backgroundColor": "",
+            "backgroundMediaMode": "cover",
+            "visibility": {
+              "mobile": true,
+              "tablet": true,
+              "desktop": true
+            },
+            "id": "{ID:CMS_PAGE_WIDGET_BLOCK_1}",
             "slots": [
               {
-                "id": "{ID:CMS_SLOT_104}",
                 "type": "moorl-cross-selling-history",
                 "slot": "productSlider",
                 "config": {
@@ -37,25 +47,63 @@
                     "source": "static",
                     "value": []
                   },
+                  "title": {
+                    "source": "static",
+                    "value": "Recently viewed"
+                  },
                   "displayMode": {
                     "source": "static",
                     "value": "standard"
                   },
                   "boxLayout": {
                     "source": "static",
-                    "value": "standard"
+                    "value": "moorl-micro"
                   },
-                  "navigation": {
+                  "navigationArrows": {
                     "source": "static",
-                    "value": true
+                    "value": "none"
+                  },
+                  "rotate": {
+                    "source": "static",
+                    "value": false
+                  },
+                  "autoplayTimeout": {
+                    "source": "static",
+                    "value": 5000
+                  },
+                  "speed": {
+                    "source": "static",
+                    "value": 300
+                  },
+                  "border": {
+                    "source": "static",
+                    "value": false
                   },
                   "elMinWidth": {
                     "source": "static",
                     "value": "300px"
+                  },
+                  "verticalAlign": {
+                    "source": "static",
+                    "value": "center"
+                  },
+                  "productStreamSorting": {
+                    "source": "static",
+                    "value": "name:ASC"
+                  },
+                  "productStreamLimit": {
+                    "source": "static",
+                    "value": 10
+                  },
+                  "navigation": {
+                    "value": true,
+                    "source": "static"
                   }
-                }
+                },
+                "id": "{ID:CMS_PAGE_WIDGET_SLOT_1}"
               }
-            ]
+            ],
+            "sizingMode": "boxed"
           }
         ]
       }

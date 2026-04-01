@@ -150,6 +150,17 @@ class CrossSellingService
         }
     }
 
+    public function getProductCrossSellingTranslation(string $type, string $languageId): string
+    {
+        $config = $this->systemConfigService->get('MoorlCrossSelling.config.' . $type);
+
+        if (empty($config[$languageId])) {
+            return self::FALLBACK_TRANSLATIONS[$type];
+        }
+
+        return $config[$languageId];
+    }
+
     private function getProductCrossSellingTranslations(string $type): array
     {
         if (isset($this->productCrossSellingTranslations[$type])) {
@@ -158,7 +169,7 @@ class CrossSellingService
 
         $config = $this->systemConfigService->get('MoorlCrossSelling.config.' . $type);
 
-        if (!isset($config[Defaults::LANGUAGE_SYSTEM]) || empty($config[Defaults::LANGUAGE_SYSTEM])) {
+        if (empty($config[Defaults::LANGUAGE_SYSTEM])) {
             $config[Defaults::LANGUAGE_SYSTEM] = self::FALLBACK_TRANSLATIONS[$type];
         }
 
@@ -434,7 +445,8 @@ class CrossSellingService
         $criteria->addFilter(new EqualsFilter('salesChannelId', $salesChannelContext->getSalesChannelId()));
         $criteria->addFilter(new EqualsFilter('processed', false));
         $criteria->setLimit(1);
-        $criteria->addAssociation('sessionProducts');
+        $sessionProductsCriteria = $criteria->getAssociation('sessionProducts');
+        $sessionProductsCriteria->addSorting(new FieldSorting('lastVisit', FieldSorting::DESCENDING));
 
         if ($salesChannelContext->getCustomerId()) {
             $criteria->addFilter(new OrFilter([

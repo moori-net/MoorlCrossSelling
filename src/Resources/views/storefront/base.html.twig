@@ -1,9 +1,16 @@
 {% sw_extends '@Storefront/storefront/base.html.twig' %}
 
-{% block base_main_inner %}
+{% block base_main %}
     {{ parent() }}
 
     {% if config('MoorlCrossSelling.config.historyPlacement') == 'content' %}
-        {% sw_include "@MoorlCrossSelling/storefront/elemement/cms-element-moorl-cross-selling-history.html.twig" ignore missing %}
+        {% set ajaxWidgetOptions = {
+            url: path('frontend.cms.page', { id: config('MoorlCrossSelling.config.cmsPageId') })
+        } %}
+
+        <div
+                data-moorl-ajax-widget
+                data-moorl-ajax-widget-options="{{ ajaxWidgetOptions|json_encode }}"
+        ></div>
     {% endif %}
 {% endblock %}
