@@ -42,9 +42,6 @@ class CrossSellingHistoryCmsElementResolver extends ProductSliderCmsElementResol
 
     public function enrich(CmsSlotEntity $slot, ResolverContext $resolverContext, ElementDataCollection $result): void
     {
-        $config = $slot->getFieldConfig();
-        $productConfig = $config->get('products');
-
         parent::enrich($slot, $resolverContext, $result);
     }
 }

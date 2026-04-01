@@ -5,5 +5,12 @@
             "moorl_cs_session": "Sessions",
             "moorl_cs_session_product": "Product visitor counter"
         }
+    },
+    "sw-cms": {
+        "elements": {
+            "moorl-cross-selling-history": {
+                "name": "Recently viewed (History)"
+            }
+        }
     }
 }

@@ -5,5 +5,12 @@
             "moorl_cs_session": "Sitzungen",
             "moorl_cs_session_product": "Produkt Besucherzähler"
         }
+    },
+    "sw-cms": {
+        "elements": {
+            "moorl-cross-selling-history": {
+                "name": "Zuletzt angesehen (Verlauf)"
+            }
+        }
     }
 }
