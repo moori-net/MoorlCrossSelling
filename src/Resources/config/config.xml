@@ -19,6 +19,15 @@
             <defaultValue>12</defaultValue>
         </input-field>
 
+        <input-field type="int">
+            <name>minAge</name>
+            <label>Minimum number of days until the history is processed</label>
+            <label lang="de-DE">Mindestanzahl an Tagen, bis der Verlauf verarbeitet wird</label>
+            <helpText>If the customer remains inactive during this period, the history will be processed and deleted.</helpText>
+            <helpText lang="de-DE">Bleibt der Kunde während dieses Zeitraums inaktiv, wird der Verlauf verarbeitet und gelöscht.</helpText>
+            <defaultValue>7</defaultValue>
+        </input-field>
+
         <input-field type="single-select">
             <name>createRelationsStrategy</name>
             <label>Strategy for creating product relations</label>

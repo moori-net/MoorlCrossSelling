@@ -34,6 +34,11 @@
             <tag name="kernel.event_subscriber"/>
         </service>
 
+        <service id="MoorlCrossSelling\Core\Content\Customer\CustomerSubscriber">
+            <argument type="service" id="MoorlCrossSelling\Core\Service\CrossSellingService"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
         <service id="MoorlCrossSelling\Core\Task\CrossSellingCreateRelationsTask">
             <tag name="shopware.scheduled.task"/>
         </service>

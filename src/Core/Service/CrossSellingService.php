@@ -28,8 +28,8 @@ use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 class CrossSellingService
 {
+    private const ISSUE_SET_LIMIT_SOLVED = false;
     private const ORDER_PROCESSED = 'moorl_cross_selling_processed';
-    private const MIN_AGE = '-24 hours';
     private const LIMIT = 25;
     private const FALLBACK_TRANSLATIONS = [
         CrossSellingRelationDefinition::TYPE_BOUGHT => 'Frequently bought together',
@@ -55,6 +55,13 @@ class CrossSellingService
         private readonly LoggerInterface $logger
     )
     {
+    }
+
+    private function getMinAge(): string
+    {
+        $minAge = $this->systemConfigService->getInt('MoorlCrossSelling.config.minAge');
+
+        return sprintf('-%d days', $minAge);
     }
 
     public function createRelationsFromSessionTask(Context $context, int $page = 1): int
@@ -190,11 +197,11 @@ class CrossSellingService
     {
         if (!$context->hasState(self::FORCE_UPDATE_STATE)) {
             $criteria = $this->getPaginatedCriteria();
-            $createdAt = (new \DateTimeImmutable())
-                ->modify(self::MIN_AGE)
+            $updatedAt = (new \DateTimeImmutable())
+                ->modify($this->getMinAge())
                 ->format(Defaults::STORAGE_DATE_TIME_FORMAT);
 
-            $criteria->addFilter(new RangeFilter('createdAt', [RangeFilter::LTE => $createdAt]));
+            $criteria->addFilter(new RangeFilter('updatedAt', [RangeFilter::LTE => $updatedAt]));
             $criteria->addFilter(new EqualsFilter('processed', false));
         } else {
             $criteria = $this->getPaginatedCriteria($page);
@@ -267,6 +274,7 @@ class CrossSellingService
             ]], $context);
         }
 
+        // Trigger "updatedAt"
         $this->crossSellingSessionRepository->upsert([[
             'id' => $session->getId()
         ]], $context);
@@ -448,11 +456,13 @@ class CrossSellingService
         $sessionProductsCriteria = $criteria->getAssociation('sessionProducts');
         $sessionProductsCriteria->addSorting(new FieldSorting('lastVisit', FieldSorting::DESCENDING));
 
+        if (self::ISSUE_SET_LIMIT_SOLVED) {
+            $itemLimit = $this->systemConfigService->getInt('MoorlCrossSelling.config.itemLimit');
+            $sessionProductsCriteria->setLimit($itemLimit);
+        }
+
         if ($salesChannelContext->getCustomerId()) {
-            $criteria->addFilter(new OrFilter([
-                new EqualsFilter('token', $salesChannelContext->getToken()),
-                new EqualsFilter('customerId', $salesChannelContext->getCustomerId()),
-            ]));
+            $criteria->addFilter(new EqualsFilter('customerId', $salesChannelContext->getCustomerId()));
         } else {
             $criteria->addFilter(new EqualsFilter('token', $salesChannelContext->getToken()));
         }

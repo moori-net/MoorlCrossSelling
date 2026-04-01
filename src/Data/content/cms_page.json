@@ -15,7 +15,6 @@
         "position": 0,
         "type": "default",
         "sizingMode": "full_width",
-        "backgroundColor": "",
         "backgroundMediaMode": "cover",
         "visibility": {
           "mobile": true,
@@ -30,7 +29,6 @@
             "sectionPosition": "main",
             "marginTop": "20px",
             "marginBottom": "20px",
-            "backgroundColor": "",
             "backgroundMediaMode": "cover",
             "visibility": {
               "mobile": true,
