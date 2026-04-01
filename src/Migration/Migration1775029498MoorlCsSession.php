@@ -5,7 +5,6 @@ namespace MoorlCrossSelling\Migration;
 use Doctrine\DBAL\Connection;
 use MoorlFoundation\Core\Framework\DataAbstractionLayer\Dbal\EntityDefinitionQueryHelper;
 use Shopware\Core\Framework\Migration\MigrationStep;
-use Shopware\Core\Framework\Plugin\Requirement\Exception\MissingRequirementException;
 
 class Migration1775029498MoorlCsSession extends MigrationStep
 {
