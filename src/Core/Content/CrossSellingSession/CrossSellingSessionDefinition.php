@@ -38,7 +38,7 @@ class CrossSellingSessionDefinition extends EntityDefinition
         return new FieldCollection(array_merge(
             FieldEntityCollection::getFieldItems(localClass: self::class),
             [
-                (new StringField('session_id', 'sessionId'))->addFlags(),
+                (new StringField('token', 'token'))->addFlags(),
                 (new BoolField('processed', 'processed'))->addFlags()
             ],
             FieldMultiEntityCollection::getOneToManyFieldItems(

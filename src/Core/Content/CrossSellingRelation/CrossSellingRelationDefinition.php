@@ -18,7 +18,7 @@ use Shopware\Core\System\SalesChannel\SalesChannelDefinition;
 class CrossSellingRelationDefinition extends EntityDefinition
 {
     final public const ENTITY_NAME = 'moorl_cs_relation';
-    final public const TYPE_SEEN = 'seen';
+    final public const TYPE_HISTORY = 'history';
     final public const TYPE_VIEWED = 'viewed';
     final public const TYPE_SIMILAR = 'similar';
     final public const TYPE_BOUGHT = 'bought';

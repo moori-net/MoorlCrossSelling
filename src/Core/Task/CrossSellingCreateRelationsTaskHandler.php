@@ -7,6 +7,7 @@ use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\MessageQueue\ScheduledTask\ScheduledTaskHandler;
+use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler(handles: CrossSellingCreateRelationsTask::class)]
@@ -15,6 +16,7 @@ class CrossSellingCreateRelationsTaskHandler extends ScheduledTaskHandler
     public function __construct(
         EntityRepository $scheduledTaskRepository,
         LoggerInterface $exceptionLogger,
+        private readonly SystemConfigService $systemConfigService,
         private readonly CrossSellingService $crossSellingService
     )
     {
@@ -23,6 +25,10 @@ class CrossSellingCreateRelationsTaskHandler extends ScheduledTaskHandler
 
     public function run(): void
     {
+        if ($this->systemConfigService->get('MoorlCrossSelling.config.createRelationsStrategy') === 'disabled') {
+            return;
+        }
+
         $context = Context::createCLIContext();
 
         $this->crossSellingService->createRelationsFromSessionTask($context);

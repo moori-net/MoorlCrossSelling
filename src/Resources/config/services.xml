@@ -29,6 +29,7 @@
         </service>
 
         <service id="MoorlCrossSelling\Core\Content\Product\ProductSubscriber">
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
             <argument type="service" id="MoorlCrossSelling\Core\Service\CrossSellingService"/>
             <tag name="kernel.event_subscriber"/>
         </service>
@@ -40,6 +41,7 @@
         <service id="MoorlCrossSelling\Core\Task\CrossSellingCreateRelationsTaskHandler">
             <argument type="service" id="scheduled_task.repository"/>
             <argument type="service" id="logger"/>
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
             <argument type="service" id="MoorlCrossSelling\Core\Service\CrossSellingService"/>
             <tag name="messenger.message_handler"/>
         </service>

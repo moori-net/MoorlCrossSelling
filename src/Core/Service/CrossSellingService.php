@@ -34,7 +34,7 @@ class CrossSellingService
     private const FALLBACK_TRANSLATIONS = [
         CrossSellingRelationDefinition::TYPE_BOUGHT => 'Frequently bought together',
         CrossSellingRelationDefinition::TYPE_VIEWED => 'Frequently viewed together',
-        CrossSellingRelationDefinition::TYPE_SEEN => 'Recently viewed',
+        CrossSellingRelationDefinition::TYPE_HISTORY => 'Recently viewed',
         CrossSellingRelationDefinition::TYPE_SIMILAR => 'Similar products',
         CrossSellingRelationDefinition::TYPE_CUSTOM => 'To go with this',
     ];
@@ -70,8 +70,8 @@ class CrossSellingService
             $this->relationsFromSessionCriteria($context, $page),
             $context
         );
-        foreach ($idSearchResult->getIds() as $sessionId) {
-            $this->createRelationsFromSession($sessionId, $context);
+        foreach ($idSearchResult->getIds() as $token) {
+            $this->createRelationsFromSession($token, $context);
         }
         return $idSearchResult->getTotal();
     }
@@ -230,7 +230,7 @@ class CrossSellingService
         return $aggregation instanceof CountResult ? $aggregation->getCount() : 0;
     }
 
-    public function addSeenProduct(string $productId, SalesChannelContext $salesChannelContext): void
+    public function addProductView(string $productId, SalesChannelContext $salesChannelContext): void
     {
         if (!$this->systemConfigService->getBool('MoorlCrossSelling.config.active', $salesChannelContext->getSalesChannelId())) {
             return;
@@ -249,7 +249,7 @@ class CrossSellingService
         } else {
             $this->crossSellingSessionProductRepository->upsert([[
                 'id' => Uuid::randomHex(),
-                'sessionId' => $session->getId(),
+                'token' => $session->getId(),
                 'productId' => $productId,
                 'count' => 1,
                 'lastVisit' => time()
@@ -261,7 +261,7 @@ class CrossSellingService
         ]], $context);
     }
 
-    public function getSeenProductIds(SalesChannelContext $salesChannelContext): array
+    public function getProductHistoryIds(SalesChannelContext $salesChannelContext): array
     {
         $session = $this->getActiveSession($salesChannelContext);
         if (!$session instanceof CrossSellingSessionEntity) {
@@ -271,14 +271,14 @@ class CrossSellingService
         return $session->getSessionProducts()->getProductIds();
     }
 
-    public function createRelationsFromSession(string $sessionId, Context $context): void
+    public function createRelationsFromSession(string $token, Context $context): void
     {
-        $criteria = new Criteria([$sessionId]);
+        $criteria = new Criteria([$token]);
         $criteria->addAssociation('sessionProducts');
 
         $session = $this->crossSellingSessionRepository->search($criteria, $context)->first();
         if (!$session instanceof CrossSellingSessionEntity) {
-            $this->logger->warning(sprintf('Session with ID %s not found', $sessionId));
+            $this->logger->warning(sprintf('Session with ID %s not found', $token));
             return;
         }
         
@@ -419,7 +419,7 @@ class CrossSellingService
 
         $this->crossSellingSessionRepository->upsert([[
             'id' => Uuid::randomHex(),
-            'sessionId' => $salesChannelContext->getToken(),
+            'token' => $salesChannelContext->getToken(),
             'customerId' => $salesChannelContext->getCustomerId(),
             'salesChannelId' => $salesChannelContext->getSalesChannelId(),
             'processed' => false
@@ -438,11 +438,11 @@ class CrossSellingService
 
         if ($salesChannelContext->getCustomerId()) {
             $criteria->addFilter(new OrFilter([
-                new EqualsFilter('sessionId', $salesChannelContext->getToken()),
+                new EqualsFilter('token', $salesChannelContext->getToken()),
                 new EqualsFilter('customerId', $salesChannelContext->getCustomerId()),
             ]));
         } else {
-            $criteria->addFilter(new EqualsFilter('sessionId', $salesChannelContext->getToken()));
+            $criteria->addFilter(new EqualsFilter('token', $salesChannelContext->getToken()));
         }
 
         $session = $this->crossSellingSessionRepository->search($criteria, $salesChannelContext->getContext())->first();

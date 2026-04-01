@@ -9,7 +9,7 @@ class CrossSellingSessionEntity extends Entity
 {
     use EntityIdTrait;
 
-    protected string $sessionId = "";
+    protected string $token = "";
     protected ?string $customerId = null;
     protected string $salesChannelId = "";
     protected bool $processed = false;
@@ -35,14 +35,14 @@ class CrossSellingSessionEntity extends Entity
         $this->processed = $processed;
     }
 
-    public function getSessionId(): string
+    public function getToken(): string
     {
-        return $this->sessionId;
+        return $this->token;
     }
 
-    public function setSessionId(string $sessionId): void
+    public function setToken(string $token): void
     {
-        $this->sessionId = $sessionId;
+        $this->token = $token;
     }
 
     public function getCustomerId(): ?string

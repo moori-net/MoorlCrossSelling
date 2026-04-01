@@ -18,6 +18,42 @@
             <label lang="de-DE">Artikelbegrenzung pro Cross-Selling-Liste</label>
             <defaultValue>12</defaultValue>
         </input-field>
+
+        <input-field type="single-select">
+            <name>createRelationsStrategy</name>
+            <label>Strategy for creating product relations</label>
+            <label lang="de-DE">Strategie zum Aufbau von Produktbeziehungen</label>
+            <options>
+                <option>
+                    <id>scheduled</id>
+                    <name>Scheduled task: moorl_cross_selling.create_relations</name>
+                    <name lang="de-DE">Geplante Aufgabe: moorl_cross_selling.create_relations</name>
+                </option>
+                <option>
+                    <id>disabled</id>
+                    <name>Console: bin/console moorl:cross-selling:create-relations [-t] [-f]</name>
+                </option>
+            </options>
+            <defaultValue>scheduled</defaultValue>
+        </input-field>
+
+        <input-field type="single-select">
+            <name>updateProductsStrategy</name>
+            <label>Strategy for updating products</label>
+            <label lang="de-DE">Strategie zum Aktualisieren von Produkten</label>
+            <options>
+                <option>
+                    <id>indexer</id>
+                    <name>Indexer (while saving or re-indexing)</name>
+                    <name lang="de-DE">Indexer (beim Speichern oder erneuten Indizieren)</name>
+                </option>
+                <option>
+                    <id>disabled</id>
+                    <name>Console: bin/console moorl:cross-selling:update-products [-t] [-f]</name>
+                </option>
+            </options>
+            <defaultValue>indexer</defaultValue>
+        </input-field>
     </card>
 
     <card>
@@ -41,7 +77,7 @@
         </component>
 
         <component name="moorl-translated-text-field">
-            <name>seen</name>
+            <name>history</name>
             <label>Recently viewed</label>
             <label lang="de-DE">Zuletzt angesehen</label>
             <placeholder>Recently viewed</placeholder>

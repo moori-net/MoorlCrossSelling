@@ -1,7 +1,7 @@
 {
     "name": "moorl/cross-selling",
-    "description": "Custom product prices",
-    "version": "1.7.2",
+    "description": "Automatic cross-selling",
+    "version": "0.7.0",
     "license": "proprietary",
     "authors": [
         {

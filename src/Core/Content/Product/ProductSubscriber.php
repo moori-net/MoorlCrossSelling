@@ -4,12 +4,16 @@ namespace MoorlCrossSelling\Core\Content\Product;
 
 use MoorlCrossSelling\Core\Service\CrossSellingService;
 use Shopware\Core\Content\Product\Events\ProductIndexerEvent;
+use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Page\Product\ProductPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ProductSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly CrossSellingService $crossSellingService)
+    public function __construct(
+        private readonly SystemConfigService $systemConfigService,
+        private readonly CrossSellingService $crossSellingService
+    )
     {
     }
 
@@ -23,7 +27,7 @@ class ProductSubscriber implements EventSubscriberInterface
 
     public function onProductPageLoaded(ProductPageLoadedEvent $event): void
     {
-        $this->crossSellingService->addSeenProduct(
+        $this->crossSellingService->addProductView(
             $event->getPage()->getProduct()->getId(),
             $event->getSalesChannelContext()
         );
@@ -31,6 +35,10 @@ class ProductSubscriber implements EventSubscriberInterface
 
     public function onProductIndexer(ProductIndexerEvent $event): void
     {
+        if ($this->systemConfigService->get('MoorlCrossSelling.config.updateProductsStrategy') === 'disabled') {
+            return;
+        }
+
         foreach ($event->getIds() as $productId) {
             $this->crossSellingService->updateProduct($productId, $event->getContext());
         }
