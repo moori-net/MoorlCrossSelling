@@ -4,6 +4,7 @@ namespace MoorlCrossSelling\Core\Content\CrossSellingSession;
 
 use MoorlFoundation\Core\Framework\DataAbstractionLayer\Collection\FieldEntityCollection;
 use MoorlFoundation\Core\Framework\DataAbstractionLayer\Collection\FieldMultiEntityCollection;
+use MoorlFoundation\Core\Framework\DataAbstractionLayer\Field\Flags\UniqueKey;
 use Shopware\Core\Content\Product\ProductDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\Required;
@@ -41,8 +42,8 @@ class CrossSellingSessionProductDefinition extends EntityDefinition
             ],
             FieldMultiEntityCollection::getManyToOneFieldItems(
                 references: [
-                    [ProductDefinition::class, [new Required()], []],
-                    [CrossSellingSessionDefinition::class, [new Required()], []],
+                    [ProductDefinition::class, [new Required(), new UniqueKey(UniqueKey::DEFAULT)], []],
+                    [CrossSellingSessionDefinition::class, [new Required(), new UniqueKey(UniqueKey::DEFAULT)], []],
                 ],
             ),
         ));

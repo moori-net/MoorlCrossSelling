@@ -4,6 +4,7 @@ namespace MoorlCrossSelling\Core\Content\CrossSellingSession;
 
 use MoorlFoundation\Core\Framework\DataAbstractionLayer\Collection\FieldEntityCollection;
 use MoorlFoundation\Core\Framework\DataAbstractionLayer\Collection\FieldMultiEntityCollection;
+use MoorlFoundation\Core\Framework\DataAbstractionLayer\Field\Flags\UniqueKey;
 use Shopware\Core\Checkout\Customer\CustomerDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\BoolField;
@@ -38,7 +39,7 @@ class CrossSellingSessionDefinition extends EntityDefinition
         return new FieldCollection(array_merge(
             FieldEntityCollection::getFieldItems(localClass: self::class),
             [
-                (new StringField('token', 'token'))->addFlags(),
+                (new StringField('token', 'token'))->addFlags(new UniqueKey(UniqueKey::DEFAULT)),
                 (new BoolField('processed', 'processed'))->addFlags()
             ],
             FieldMultiEntityCollection::getOneToManyFieldItems(
@@ -47,8 +48,8 @@ class CrossSellingSessionDefinition extends EntityDefinition
             ),
             FieldMultiEntityCollection::getManyToOneFieldItems(
                 references: [
-                    [SalesChannelDefinition::class, [new Required()], []],
-                    [CustomerDefinition::class, [], []],
+                    [SalesChannelDefinition::class, [new Required(), new UniqueKey(UniqueKey::DEFAULT)], []],
+                    [CustomerDefinition::class, [new UniqueKey(UniqueKey::DEFAULT)], []],
                 ],
             ),
         ));

@@ -7,6 +7,7 @@ use MoorlCrossSelling\Core\Content\CrossSellingRelation\CrossSellingRelationColl
 use MoorlCrossSelling\Core\Content\CrossSellingRelation\CrossSellingRelationDefinition;
 use MoorlCrossSelling\Core\Content\CrossSellingRelation\CrossSellingRelationEntity;
 use MoorlCrossSelling\Core\Content\CrossSellingSession\CrossSellingSessionEntity;
+use MoorlCrossSelling\Core\Content\CrossSellingSession\CrossSellingSessionProductCollection;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Content\Product\Aggregate\ProductCrossSelling\ProductCrossSellingDefinition;
@@ -55,13 +56,6 @@ class CrossSellingService
         private readonly LoggerInterface $logger
     )
     {
-    }
-
-    private function getMinAge(): string
-    {
-        $minAge = $this->systemConfigService->getInt('MoorlCrossSelling.config.minAge');
-
-        return sprintf('-%d days', $minAge);
     }
 
     public function createRelationsFromSessionTask(Context $context, int $page = 1): int
@@ -160,6 +154,9 @@ class CrossSellingService
     public function getProductCrossSellingTranslation(string $type, string $languageId): string
     {
         $config = $this->systemConfigService->get('MoorlCrossSelling.config.' . $type);
+        if (!is_array($config)) {
+            $config = [];
+        }
 
         if (empty($config[$languageId])) {
             return self::FALLBACK_TRANSLATIONS[$type];
@@ -175,6 +172,9 @@ class CrossSellingService
         }
 
         $config = $this->systemConfigService->get('MoorlCrossSelling.config.' . $type);
+        if (!is_array($config)) {
+            $config = [];
+        }
 
         if (empty($config[Defaults::LANGUAGE_SYSTEM])) {
             $config[Defaults::LANGUAGE_SYSTEM] = self::FALLBACK_TRANSLATIONS[$type];
@@ -248,7 +248,11 @@ class CrossSellingService
         return $aggregation instanceof CountResult ? $aggregation->getCount() : 0;
     }
 
-    public function addProductView(string $productId, SalesChannelContext $salesChannelContext): void
+    public function addProductView(
+        string $productId,
+        SalesChannelContext $salesChannelContext,
+        int $quantity = 1,
+    ): void
     {
         if (!$this->systemConfigService->getBool('MoorlCrossSelling.config.active', $salesChannelContext->getSalesChannelId())) {
             return;
@@ -261,7 +265,7 @@ class CrossSellingService
         if ($sessionProduct) {
             $this->crossSellingSessionProductRepository->upsert([[
                 'id' => $sessionProduct->getId(),
-                'count' => $sessionProduct->getCount() + 1,
+                'count' => $sessionProduct->getCount() + $quantity,
                 'lastVisit' => time()
             ]], $context);
         } else {
@@ -269,7 +273,7 @@ class CrossSellingService
                 'id' => Uuid::randomHex(),
                 'sessionId' => $session->getId(),
                 'productId' => $productId,
-                'count' => 1,
+                'count' => $quantity,
                 'lastVisit' => time()
             ]], $context);
         }
@@ -447,7 +451,56 @@ class CrossSellingService
         return $this->getActiveSession($salesChannelContext);
     }
 
-    private function getActiveSession(SalesChannelContext $salesChannelContext): ?CrossSellingSessionEntity
+    public function updateActiveSession(?CrossSellingSessionEntity $session, SalesChannelContext $salesChannelContext): void
+    {
+        if (!$session instanceof CrossSellingSessionEntity) {
+            return;
+        }
+        if (!$session->getSessionProducts() instanceof CrossSellingSessionProductCollection) {
+            return;
+        }
+
+        $existingSession = $this->getActiveSession($salesChannelContext);
+
+        if ($existingSession instanceof CrossSellingSessionEntity) {
+            // Merge with existing session and delete after
+            $payload = [];
+
+            foreach ($session->getSessionProducts() as $sessionProduct) {
+                $payloadItem = [
+                    'id' => $sessionProduct->getId(),
+                    'lastVisit' => $sessionProduct->getLastVisit(),
+                    'sessionId' => $existingSession->getId(),
+                ];
+
+                $existingSessionProduct = $existingSession->getSessionProducts()->getByProductId(
+                    $sessionProduct->getProductId()
+                );
+
+                if ($existingSessionProduct) {
+                    $payloadItem['id'] = $existingSessionProduct->getId();
+                    $payloadItem['count'] = $existingSessionProduct->getCount() + $sessionProduct->getCount();
+                }
+
+                $payload[] = $payloadItem;
+            }
+
+            $this->crossSellingSessionProductRepository->upsert($payload, $salesChannelContext->getContext());
+
+            $this->crossSellingSessionRepository->delete([[
+                'id' => $session->getId()
+            ]], $salesChannelContext->getContext());
+        } else {
+            // Update token and customer ID
+            $this->crossSellingSessionRepository->upsert([[
+                'id' => $session->getId(),
+                'token' => $salesChannelContext->getToken(),
+                'customerId' => $salesChannelContext->getCustomerId(),
+            ]], $salesChannelContext->getContext());
+        }
+    }
+
+    public function getActiveSession(SalesChannelContext $salesChannelContext): ?CrossSellingSessionEntity
     {
         $criteria = new Criteria();
         $criteria->addFilter(new EqualsFilter('salesChannelId', $salesChannelContext->getSalesChannelId()));
@@ -490,5 +543,12 @@ class CrossSellingService
 
             $this->connection->executeStatement($sql);
         }
+    }
+
+    private function getMinAge(): string
+    {
+        $minAge = $this->systemConfigService->getInt('MoorlCrossSelling.config.minAge');
+
+        return sprintf('-%d days', $minAge);
     }
 }

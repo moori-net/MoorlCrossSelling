@@ -4,6 +4,7 @@ namespace MoorlCrossSelling\Core\Content\CrossSellingRelation;
 
 use MoorlFoundation\Core\Framework\DataAbstractionLayer\Collection\FieldEntityCollection;
 use MoorlFoundation\Core\Framework\DataAbstractionLayer\Collection\FieldMultiEntityCollection;
+use MoorlFoundation\Core\Framework\DataAbstractionLayer\Field\Flags\UniqueKey;
 use Shopware\Core\Content\Product\ProductDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\FkField;
@@ -44,18 +45,18 @@ class CrossSellingRelationDefinition extends EntityDefinition
         return new FieldCollection(array_merge(
             FieldEntityCollection::getFieldItems(localClass: self::class),
             [
-                (new FkField('product_a_id', 'productAId', ProductDefinition::class))->addFlags(new Required()),
-                (new ReferenceVersionField(ProductDefinition::class, 'product_a_version_id'))->addFlags(new Required()),
-                (new FkField('product_b_id', 'productBId', ProductDefinition::class))->addFlags(new Required()),
-                (new ReferenceVersionField(ProductDefinition::class, 'product_b_version_id'))->addFlags(new Required()),
-                (new StringField('type', 'type'))->addFlags(new Required()),
+                (new FkField('product_a_id', 'productAId', ProductDefinition::class))->addFlags(new Required(), new UniqueKey(UniqueKey::DEFAULT)),
+                (new ReferenceVersionField(ProductDefinition::class, 'product_a_version_id'))->addFlags(new Required(), new UniqueKey(UniqueKey::DEFAULT)),
+                (new FkField('product_b_id', 'productBId', ProductDefinition::class))->addFlags(new Required(), new UniqueKey(UniqueKey::DEFAULT)),
+                (new ReferenceVersionField(ProductDefinition::class, 'product_b_version_id'))->addFlags(new Required(), new UniqueKey(UniqueKey::DEFAULT)),
+                (new StringField('type', 'type'))->addFlags(new Required(), new UniqueKey(UniqueKey::DEFAULT)),
                 (new IntField('score', 'score'))->addFlags(),
                 (new ManyToOneAssociationField('productA', 'product_a_id', ProductDefinition::class))->addFlags(),
                 (new ManyToOneAssociationField('productB', 'product_b_id', ProductDefinition::class))->addFlags(),
             ],
             FieldMultiEntityCollection::getManyToOneFieldItems(
                 references: [
-                    [SalesChannelDefinition::class, [new Required()], []]
+                    [SalesChannelDefinition::class, [new Required(), new UniqueKey(UniqueKey::DEFAULT)], []]
                 ],
             ),
         ));
