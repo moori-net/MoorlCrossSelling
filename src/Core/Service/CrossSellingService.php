@@ -468,6 +468,7 @@ class CrossSellingService
         }
 
         $session = $this->crossSellingSessionRepository->search($criteria, $salesChannelContext->getContext())->first();
+
         return $session instanceof CrossSellingSessionEntity ? $session : null;
     }
 

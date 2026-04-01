@@ -67,6 +67,13 @@
             <tag name="shopware.cms.data_resolver"/>
         </service>
 
+        <service id="MoorlCrossSelling\Storefront\Controller\CrossSellingController" public="true">
+            <argument type="service" id="MoorlCrossSelling\Core\Service\CrossSellingService"/>
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+        </service>
+
         <service id="MoorlCrossSelling\Data\Data">
             <tag name="moorl.foundation.data" priority="1001"/>
         </service>
