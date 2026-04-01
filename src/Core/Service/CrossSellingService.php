@@ -249,7 +249,7 @@ class CrossSellingService
         } else {
             $this->crossSellingSessionProductRepository->upsert([[
                 'id' => Uuid::randomHex(),
-                'token' => $session->getId(),
+                'sessionId' => $session->getId(),
                 'productId' => $productId,
                 'count' => 1,
                 'lastVisit' => time()

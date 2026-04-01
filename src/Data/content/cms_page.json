@@ -1,0 +1,64 @@
+[
+  {
+    "translations": {
+      "{de-DE}": {
+        "name": "Zuletzt angesehen (Verlauf)"
+      },
+      "{en-GB}": {
+        "name": "Recently viewed (History)"
+      }
+    },
+    "type": "widget",
+    "id": "{ID:CMS_PAGE_WIDGET}",
+    "sections": [
+      {
+        "position": 0,
+        "type": "default",
+        "sizingMode": "full_width",
+        "backgroundMediaMode": "cover",
+        "visibility": {
+          "mobile": true,
+          "tablet": true,
+          "desktop": true
+        },
+        "id": "{ID:CMS_PAGE_WIDGET_SECTION_1}",
+        "blocks": [
+          {
+            "id": "{ID:CMS_PAGE_WIDGET_BLOCK_1}",
+            "position": 0,
+            "type": "product-slider",
+            "slots": [
+              {
+                "id": "{ID:CMS_SLOT_104}",
+                "type": "moorl-cross-selling-history",
+                "slot": "productSlider",
+                "config": {
+                  "products": {
+                    "source": "static",
+                    "value": []
+                  },
+                  "displayMode": {
+                    "source": "static",
+                    "value": "standard"
+                  },
+                  "boxLayout": {
+                    "source": "static",
+                    "value": "standard"
+                  },
+                  "navigation": {
+                    "source": "static",
+                    "value": true
+                  },
+                  "elMinWidth": {
+                    "source": "static",
+                    "value": "300px"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

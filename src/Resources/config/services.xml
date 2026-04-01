@@ -55,5 +55,15 @@
             <argument type="service" id="MoorlCrossSelling\Core\Service\CrossSellingService"/>
             <tag name="console.command"/>
         </service>
+
+        <service id="MoorlCrossSelling\Core\Content\Product\Cms\CrossSellingHistoryCmsElementResolver"
+                 parent="Shopware\Core\Content\Product\Cms\ProductSliderCmsElementResolver">
+            <argument type="service" id="MoorlCrossSelling\Core\Service\CrossSellingService"/>
+            <tag name="shopware.cms.data_resolver"/>
+        </service>
+
+        <service id="MoorlCrossSelling\Data\Data">
+            <tag name="moorl.foundation.data" priority="1001"/>
+        </service>
     </services>
 </container>

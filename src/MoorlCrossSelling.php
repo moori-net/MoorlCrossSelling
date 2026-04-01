@@ -17,7 +17,12 @@ class MoorlCrossSelling extends Plugin
         'moorl_cs_session',
         'moorl_cs_session_product',
     ];
-    final public const SHOPWARE_TABLES = [];
+    final public const SHOPWARE_TABLES = [
+        'cms_page'
+    ];
+    final public const LOCKED_ENTITY_RECORDS = [
+        'cms_page' => ["{ID:CMS_PAGE_WIDGET}"]
+    ];
 
     public function activate(ActivateContext $activateContext): void
     {

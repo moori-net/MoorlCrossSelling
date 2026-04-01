@@ -57,6 +57,37 @@
     </card>
 
     <card>
+        <title>Recently viewed (History)</title>
+        <title lang="de-DE">Zuletzt angesehen (Verlauf)</title>
+
+        <input-field type="single-select">
+            <name>historyPlacement</name>
+            <label>Placement</label>
+            <label lang="de-DE">Platzierung</label>
+            <options>
+                <option>
+                    <id>content</id>
+                    <name>Content section</name>
+                    <name lang="de-DE">Inhaltsbereich</name>
+                </option>
+                <option>
+                    <id>disabled</id>
+                    <name>Disabled</name>
+                    <name lang="de-DE">Deaktiviert</name>
+                </option>
+            </options>
+            <defaultValue>content</defaultValue>
+        </input-field>
+
+        <component name="sw-entity-single-select">
+            <name>cmsPageId</name>
+            <entity>cms_page</entity>
+            <label>CMS widget (Page)</label>
+            <label lang="de-DE">CMS Widget (Seite)</label>
+        </component>
+    </card>
+
+    <card>
         <title>Translations</title>
         <title lang="de-DE">Übersetzungen</title>
 
