@@ -2,9 +2,7 @@
 description: {var:description_de_de}
 tags:
   - Shopware 6.7
-  - Product history
-  - Viewed together
-  - Bought together
+  - Product Verlauf
 ---
 
 # {var:label_de_de}
