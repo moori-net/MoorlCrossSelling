@@ -31,13 +31,17 @@ store:
     en: []
   highlights:
     de:
-      - Automatische Erstellung von Cross-Selling
-      - Auswertung aller Bestellungen und Kundensitzungen
-      - Verlauf der aktuellen Kundensitzung
+      - Automatische Erstellung von Cross-Selling-Listen
+      - Auswertung von Produktaufrufen und Bestellungen
+      - Datenbasierte Produktempfehlungen
+      - Weniger manueller Pflegeaufwand
+      - Relevante Empfehlungen direkt im Storefront
     en:
       - Automatic creation of cross-selling lists
-      - Evaluation of all orders and customer sessions
-      - History of the current customer session
+      - Analysis of product views and orders
+      - Data-driven product recommendations
+      - Reduced manual maintenance effort
+      - Relevant recommendations directly in the storefront
   features:
     de: []
     en: []
@@ -108,14 +112,12 @@ store:
         en: false
       priority: 0
 
-
 changelog:
   enabled: true
   pattern: '^[A-Z].{19,}'
   template: |
     {{range .Commits}}- {{ .Message }}
     {{end}}
-
 
 build:
   zip:
