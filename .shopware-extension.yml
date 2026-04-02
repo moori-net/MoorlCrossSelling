@@ -19,25 +19,25 @@ store:
     en: file:docs/manual.en.md
   tags:
     de:
-      - Produkt
-      - Preise
-      - Kunden
+      - Cross-Selling
+      - Verlauf
+      - Zuletzt angesehen
     en:
-      - Product
-      - Prices
-      - Customers
+      - Cross-Selling
+      - History
+      - Recently viewed
   videos:
     de: []
     en: []
   highlights:
     de:
-      - Flexible Preisgestaltung
-      - Einfache Bedienung
-      - Perfekte Ergänzung zu Rabatte und Aufschläge für Kundengruppen
+      - Automatische Erstellung von Cross-Selling
+      - Auswertung aller Bestellungen und Kundensitzungen
+      - Verlauf der aktuellen Kundensitzung
     en:
-      - Create flexible prices
-      - Easy to use
-      - Perfect complement to discounts and surcharges for customer groups
+      - Automatic creation of cross-selling lists
+      - Evaluation of all orders and customer sessions
+      - History of the current customer session
   features:
     de: []
     en: []
@@ -45,7 +45,7 @@ store:
     de: []
     en: []
   images:
-    - file: docs/images/admin-1.png
+    - file: docs/images/storefront-product-detail-1.jpg
       activate:
         de: true
         en: true
@@ -53,7 +53,7 @@ store:
         de: true
         en: true
       priority: 0
-    - file: docs/images/admin-2.png
+    - file: docs/images/storefront-product-detail-2.jpg
       activate:
         de: true
         en: true
@@ -61,7 +61,7 @@ store:
         de: false
         en: false
       priority: 0
-    - file: docs/images/admin-3.png
+    - file: docs/images/console-commands.jpg
       activate:
         de: true
         en: true
@@ -69,7 +69,7 @@ store:
         de: false
         en: false
       priority: 0
-    - file: docs/images/admin-4.png
+    - file: docs/images/admin-related-products-list.jpg
       activate:
         de: true
         en: true
@@ -77,7 +77,7 @@ store:
         de: false
         en: false
       priority: 0
-    - file: docs/images/admin-5.png
+    - file: docs/images/admin-related-products-detail.jpg
       activate:
         de: true
         en: true
@@ -85,21 +85,21 @@ store:
         de: false
         en: false
       priority: 0
-    - file: docs/images/admin-7.png
+    - file: docs/images/admin-product-cross-selling.jpg
       activate:
         de: true
         en: true
       preview:
         de: false
         en: false
-    - file: docs/images/admin-8.png
+    - file: docs/images/admin-plugin-config-1.jpg
       activate:
         de: true
         en: true
       preview:
         de: false
         en: false
-    - file: docs/images/storefront-customer-price.png
+    - file: docs/images/admin-plugin-config-2.jpg
       activate:
         de: true
         en: true
