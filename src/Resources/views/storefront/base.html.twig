@@ -8,7 +8,12 @@
             url: path('frontend.cms.page', { id: config('MoorlCrossSelling.config.cmsPageId') })
         } %}
 
-        <div data-moorl-ajax-widget data-moorl-ajax-widget-options="{{ options|json_encode }}"></div>
+        <div
+                data-moorl-ajax-widget
+                data-moorl-ajax-widget-options="{{ options|json_encode }}"
+                aria-live="polite"
+                aria-atomic="false"
+        ></div>
     {% endif %}
 
     {% if page.product.id %}
@@ -17,6 +22,11 @@
             silent: true
         } %}
 
-        <div data-moorl-ajax-widget data-moorl-ajax-widget-options="{{ options|json_encode }}"></div>
+        <div
+                data-moorl-ajax-widget
+                data-moorl-ajax-widget-options="{{ options|json_encode }}"
+                aria-live="off"
+                aria-atomic="false"
+        ></div>
     {% endif %}
 {% endblock %}
