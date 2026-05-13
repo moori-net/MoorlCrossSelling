@@ -6,13 +6,18 @@ use Doctrine\DBAL\Connection;
 use MoorlCrossSelling\Core\Content\CrossSellingRelation\CrossSellingRelationCollection;
 use MoorlCrossSelling\Core\Content\CrossSellingRelation\CrossSellingRelationDefinition;
 use MoorlCrossSelling\Core\Content\CrossSellingRelation\CrossSellingRelationEntity;
+use MoorlCrossSelling\Core\Content\CrossSellingSession\CrossSellingSessionDefinition;
 use MoorlCrossSelling\Core\Content\CrossSellingSession\CrossSellingSessionEntity;
 use MoorlCrossSelling\Core\Content\CrossSellingSession\CrossSellingSessionProductCollection;
+use MoorlCrossSelling\Core\Content\CrossSellingSession\CrossSellingSessionProductDefinition;
 use Psr\Log\LoggerInterface;
+use Shopware\Core\Checkout\Order\OrderDefinition;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Content\Product\Aggregate\ProductCrossSelling\ProductCrossSellingDefinition;
+use Shopware\Core\Content\Product\ProductDefinition;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\DataAbstractionLayer\Dbal\EntityDefinitionQueryHelper;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Aggregation\Metric\CountAggregation;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\AggregationResult\Metric\CountResult;
@@ -22,6 +27,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\OrFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\RangeFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\IdSearchResult;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -58,7 +64,7 @@ class CrossSellingService
     {
     }
 
-    public function createRelationsFromSessionTask(Context $context, int $page = 1): int
+    public function createRelationsFromSessionTask(Context $context, int $page = 1): IdSearchResult
     {
         $this->truncateTable(
             $context,
@@ -71,13 +77,17 @@ class CrossSellingService
             $this->relationsFromSessionCriteria($context, $page),
             $context
         );
+
+        $payload = $this->createEmptyPayload();
         foreach ($idSearchResult->getIds() as $token) {
-            $this->createRelationsFromSession($token, $context);
+            $this->createRelationsFromSession($payload, $token, $context);
         }
-        return $idSearchResult->getTotal();
+        $this->processPayload($payload, $context);
+
+        return $idSearchResult;
     }
 
-    public function createRelationsFromOrderTask(Context $context, int $page = 1): int
+    public function createRelationsFromOrderTask(Context $context, int $page = 1): IdSearchResult
     {
         $this->truncateTable(
             $context,
@@ -90,13 +100,17 @@ class CrossSellingService
             $this->relationsFromOrderCriteria($context, $page),
             $context
         );
+
+        $payload = $this->createEmptyPayload();
         foreach ($idSearchResult->getIds() as $orderId) {
-            $this->createRelationsFromOrder($orderId, $context);
+            $this->createRelationsFromOrder($payload, $orderId, $context);
         }
-        return $idSearchResult->getTotal();
+        $this->processPayload($payload, $context);
+
+        return $idSearchResult;
     }
 
-    public function updateProductsTask(Context $context, int $page = 1): int
+    public function updateProductsTask(Context $context, int $page = 1): IdSearchResult
     {
         $this->truncateTable(
             $context,
@@ -106,13 +120,17 @@ class CrossSellingService
 
         $criteria = $this->getPaginatedCriteria($page);
         $idSearchResult = $this->productRepository->searchIds($criteria, $context);
+
+        $payload = $this->createEmptyPayload();
         foreach ($idSearchResult->getIds() as $productId) {
-            $this->updateProduct($productId, $context);
+            $this->updateProduct($payload, $productId, $context);
         }
-        return $idSearchResult->getTotal();
+        $this->processPayload($payload, $context);
+
+        return $idSearchResult;
     }
 
-    public function updateProduct(string $productId, Context $context): void
+    public function updateProduct(array &$payload, string $productId, Context $context): void
     {
         $itemLimit = $this->systemConfigService->getInt('MoorlCrossSelling.config.itemLimit');
 
@@ -138,7 +156,7 @@ class CrossSellingService
 
             $crossSellingId = md5(sprintf("%s|%s", $type, $productId));
 
-            $payload = [
+            $payload[ProductCrossSellingDefinition::ENTITY_NAME][] = [
                 'id' => $crossSellingId,
                 'productId' => $productId,
                 'active' => true,
@@ -146,8 +164,6 @@ class CrossSellingService
                 'assignedProducts' => $crossSellingRelations->fetchAssignedProductsPayload($productId),
                 'translations' => $this->getProductCrossSellingTranslations($type),
             ];
-
-            $this->productCrossSellingRepository->upsert([$payload], $context);
         }
     }
 
@@ -294,7 +310,7 @@ class CrossSellingService
         return $session->getSessionProducts()->getProductIds();
     }
 
-    public function createRelationsFromSession(string $token, Context $context): void
+    public function createRelationsFromSession(array &$payload, string $token, Context $context): void
     {
         $criteria = new Criteria([$token]);
         $criteria->addAssociation('sessionProducts');
@@ -306,7 +322,6 @@ class CrossSellingService
         }
         
         $productIds = [];
-
         foreach ($session->getSessionProducts() as $sessionProduct) {
             if (!$sessionProduct->getProductId()) {
                 continue;
@@ -316,19 +331,20 @@ class CrossSellingService
         }
 
         $this->createRelations(
+            $payload,
             $productIds,
             CrossSellingRelationDefinition::TYPE_VIEWED,
             $session->getSalesChannelId(),
             $context
         );
 
-        $this->crossSellingSessionRepository->upsert([[
+        $payload[CrossSellingSessionDefinition::ENTITY_NAME][] = [
             'id' => $session->getId(),
             'processed' => true
-        ]], $context);
+        ];
     }
     
-    public function createRelationsFromOrder(string $orderId, Context $context): void
+    public function createRelationsFromOrder(array &$payload, string $orderId, Context $context): void
     {
         $criteria = new Criteria([$orderId]);
         $criteria->addAssociation('lineItems');
@@ -350,21 +366,23 @@ class CrossSellingService
         }
 
         $this->createRelations(
+            $payload,
             $productIds,
             CrossSellingRelationDefinition::TYPE_BOUGHT,
             $order->getSalesChannelId(),
             $context
         );
 
-        $this->orderRepository->upsert([[
+        $payload[OrderDefinition::ENTITY_NAME][] = [
             'id' => $order->getId(),
             'customFields' => [
                 self::ORDER_PROCESSED => 1
             ]
-        ]], $context);
+        ];
     }
 
     private function createRelations(
+        array &$payload,
         array $productIds,
         string $type,
         string $salesChannelId,
@@ -380,6 +398,7 @@ class CrossSellingService
         for ($i = 0; $i < $count; $i++) {
             for ($j = $i + 1; $j < $count; $j++) {
                 $this->createRelation(
+                    $payload,
                     $productIds[$i],
                     $productIds[$j],
                     $type,
@@ -391,6 +410,7 @@ class CrossSellingService
     }
 
     private function createRelation(
+        array &$payload,
         string $productAId,
         string $productBId,
         string $type,
@@ -415,22 +435,26 @@ class CrossSellingService
         $crossSellingRelation = $this->crossSellingRelationRepository->search($criteria, $context)->first();
 
         if ($crossSellingRelation instanceof CrossSellingRelationEntity) {
-            $this->crossSellingRelationRepository->upsert([[
+            $payload[CrossSellingRelationDefinition::ENTITY_NAME][] = [
                 'id' => $crossSellingRelation->getId(),
                 'score' => $crossSellingRelation->getScore() + 1
-            ]], $context);
+            ];
+
+            $this->processPayload($payload, $context);
 
             return;
         }
 
-        $this->crossSellingRelationRepository->upsert([[
+        $payload[CrossSellingRelationDefinition::ENTITY_NAME][] = [
             'id' => Uuid::randomHex(),
             'type' => $type,
             'salesChannelId' => $salesChannelId,
             'productAId' => $productAId,
             'productBId' => $productBId,
             'score' => 1,
-        ]], $context);
+        ];
+
+        $this->processPayload($payload, $context);
     }
 
     private function getOrCreateActiveSession(SalesChannelContext $salesChannelContext): CrossSellingSessionEntity
@@ -536,13 +560,21 @@ class CrossSellingService
 
     private function truncateTable(Context $context, int $page, string $entity, ?string $type = null): void
     {
-        if ($page === 1 && $context->hasState(self::TRUNCATE_TABLE_STATE)) {
-            $sql = $type ?
-                sprintf("DELETE FROM `%s` WHERE `type` = '%s';", $entity, $type) :
-                sprintf("DELETE FROM `%s`;", $entity);
-
-            $this->connection->executeStatement($sql);
+        if ($page !== 1 || !$context->hasState(self::TRUNCATE_TABLE_STATE)) {
+            return;
         }
+
+        $queryBuilder = $this->connection->createQueryBuilder();
+
+        $queryBuilder->delete(EntityDefinitionQueryHelper::escape($entity));
+
+        if ($type !== null) {
+            $queryBuilder
+                ->where('`type` = :type')
+                ->setParameter('type', $type);
+        }
+
+        $queryBuilder->executeStatement();
     }
 
     private function getMinAge(): string
@@ -550,5 +582,41 @@ class CrossSellingService
         $minAge = $this->systemConfigService->getInt('MoorlCrossSelling.config.minAge');
 
         return sprintf('-%d days', $minAge);
+    }
+
+    public function createEmptyPayload(): array
+    {
+        return [
+            CrossSellingSessionDefinition::ENTITY_NAME => [],
+            CrossSellingSessionProductDefinition::ENTITY_NAME => [],
+            CrossSellingRelationDefinition::ENTITY_NAME => [],
+            OrderDefinition::ENTITY_NAME => [],
+            ProductDefinition::ENTITY_NAME => [],
+            ProductCrossSellingDefinition::ENTITY_NAME => [],
+        ];
+    }
+
+    public function processPayload(array &$payload, Context $context): void
+    {
+        if (count($payload[CrossSellingSessionDefinition::ENTITY_NAME]) > 0) {
+            $this->crossSellingSessionRepository->upsert($payload[CrossSellingSessionDefinition::ENTITY_NAME], $context);
+        }
+        if (count($payload[CrossSellingSessionProductDefinition::ENTITY_NAME]) > 0) {
+            $this->crossSellingSessionProductRepository->upsert($payload[CrossSellingSessionProductDefinition::ENTITY_NAME], $context);
+        }
+        if (count($payload[CrossSellingRelationDefinition::ENTITY_NAME]) > 0) {
+            $this->crossSellingRelationRepository->upsert($payload[CrossSellingRelationDefinition::ENTITY_NAME], $context);
+        }
+        if (count($payload[OrderDefinition::ENTITY_NAME]) > 0) {
+            $this->orderRepository->upsert($payload[OrderDefinition::ENTITY_NAME], $context);
+        }
+        if (count($payload[ProductDefinition::ENTITY_NAME]) > 0) {
+            $this->productRepository->upsert($payload[ProductDefinition::ENTITY_NAME], $context);
+        }
+        if (count($payload[ProductCrossSellingDefinition::ENTITY_NAME]) > 0) {
+            $this->productCrossSellingRepository->upsert($payload[ProductCrossSellingDefinition::ENTITY_NAME], $context);
+        }
+
+        $payload = $this->createEmptyPayload();
     }
 }

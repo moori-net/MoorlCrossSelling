@@ -32,15 +32,29 @@ class CrossSellingCreateRelationsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $io = new ShopwareStyle($input, $output);
+
         $context = Context::createCLIContext();
+
         if ($input->getOption('truncate')) {
+            $io->warning([
+                'The truncate option is active.',
+                'Target table `moorl_cs_relation` data will be deleted before the update runs.',
+                'This action can be destructive and should not be used accidentally.',
+            ]);
+
+            if (!$io->confirm('Do you really want to continue?', false)) {
+                $io->note('Command aborted.');
+                return self::SUCCESS;
+            }
+
             $context->addState(CrossSellingService::TRUNCATE_TABLE_STATE);
         }
+
         if ($input->getOption('force')) {
             $context->addState(CrossSellingService::FORCE_UPDATE_STATE);
         }
 
-        $io = new ShopwareStyle($input, $output);
         $io->title('Creating relations');
 
         $io->newLine(2);
@@ -53,8 +67,8 @@ class CrossSellingCreateRelationsCommand extends Command
         do {
             $page++;
             $step = $this->crossSellingService->createRelationsFromSessionTask($context, $page);
-            $progressBar->advance($step);
-        } while ($step);
+            $progressBar->advance($step->getTotal());
+        } while ($step->getIds());
         $progressBar->finish();
         $io->newLine(3);
         $io->success(sprintf('Successfully created %d relations.', $count));
@@ -69,8 +83,8 @@ class CrossSellingCreateRelationsCommand extends Command
         do {
             $page++;
             $step = $this->crossSellingService->createRelationsFromOrderTask($context, $page);
-            $progressBar->advance($step);
-        } while ($step);
+            $progressBar->advance($step->getTotal());
+        } while ($step->getIds());
         $progressBar->finish();
         $io->newLine(3);
         $io->success(sprintf('Successfully created %d relations.', $count));

@@ -30,7 +30,9 @@ class ProductSubscriber implements EventSubscriberInterface
         }
 
         foreach ($event->getIds() as $productId) {
-            $this->crossSellingService->updateProduct($productId, $event->getContext());
+            $payload = $this->crossSellingService->createEmptyPayload();
+            $this->crossSellingService->updateProduct($payload, $productId, $event->getContext());
+            $this->crossSellingService->processPayload($payload, $event->getContext());
         }
     }
 }
