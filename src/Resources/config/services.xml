@@ -24,7 +24,6 @@
             <argument type="service" id="order.repository"/>
             <argument type="service" id="product.repository"/>
             <argument type="service" id="product_cross_selling.repository"/>
-            <argument type="service" id="Doctrine\DBAL\Connection"/>
             <argument type="service" id="logger"/>
         </service>
 

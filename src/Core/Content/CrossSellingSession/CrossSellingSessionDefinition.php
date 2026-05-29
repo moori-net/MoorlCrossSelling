@@ -7,7 +7,6 @@ use MoorlFoundation\Core\Framework\DataAbstractionLayer\Collection\FieldMultiEnt
 use MoorlFoundation\Core\Framework\DataAbstractionLayer\Field\Flags\UniqueKey;
 use Shopware\Core\Checkout\Customer\CustomerDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
-use Shopware\Core\Framework\DataAbstractionLayer\Field\BoolField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\Required;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\StringField;
 use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
@@ -39,8 +38,7 @@ class CrossSellingSessionDefinition extends EntityDefinition
         return new FieldCollection(array_merge(
             FieldEntityCollection::getFieldItems(localClass: self::class),
             [
-                (new StringField('token', 'token'))->addFlags(new UniqueKey(UniqueKey::DEFAULT)),
-                (new BoolField('processed', 'processed'))->addFlags()
+                (new StringField('token', 'token'))->addFlags(new UniqueKey(UniqueKey::DEFAULT))
             ],
             FieldMultiEntityCollection::getOneToManyFieldItems(
                 localClass: self::class,

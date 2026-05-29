@@ -3,6 +3,7 @@
 namespace MoorlCrossSelling\Storefront\Controller;
 
 use MoorlCrossSelling\Core\Service\CrossSellingService;
+use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\PlatformRequest;
 use Shopware\Core\System\SalesChannel\NoContentResponse;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -30,10 +31,14 @@ class CrossSellingController extends StorefrontController
     )]
     public function track(string $productId, SalesChannelContext $salesChannelContext): Response
     {
-        $this->crossSellingService->addProductView($productId, $salesChannelContext);
-
         $response = new NoContentResponse();
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+
+        if (!Uuid::isValid($productId)) {
+            return $response;
+        }
+
+        $this->crossSellingService->addProductView($productId, $salesChannelContext);
 
         return $response;
     }

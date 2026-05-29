@@ -8,7 +8,6 @@ use Shopware\Core\Framework\Context;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand('moorl:cross-selling:update-products')]
@@ -21,39 +20,11 @@ class CrossSellingUpdateProductsCommand extends Command
         parent::__construct();
     }
 
-    protected function configure(): void
-    {
-        parent::configure();
-
-        $this
-            ->addOption('truncate', 't', InputOption::VALUE_NONE, 'Truncate target table')
-            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Force update');
-    }
-
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new ShopwareStyle($input, $output);
 
         $context = Context::createCLIContext();
-
-        if ($input->getOption('truncate')) {
-            $io->warning([
-                'The truncate option is active.',
-                'Target table `product_cross_selling` data will be deleted before the update runs.',
-                'This action can be destructive and should not be used accidentally.',
-            ]);
-
-            if (!$io->confirm('Do you really want to continue?', false)) {
-                $io->note('Command aborted.');
-                return self::SUCCESS;
-            }
-
-            $context->addState(CrossSellingService::TRUNCATE_TABLE_STATE);
-        }
-
-        if ($input->getOption('force')) {
-            $context->addState(CrossSellingService::FORCE_UPDATE_STATE);
-        }
 
         $io->title('Updating products');
 

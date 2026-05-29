@@ -12,7 +12,6 @@ class CrossSellingSessionEntity extends Entity
     protected string $token = "";
     protected ?string $customerId = null;
     protected string $salesChannelId = "";
-    protected bool $processed = false;
     protected ?CrossSellingSessionProductCollection $sessionProducts = null;
 
     public function getSessionProducts(): ?CrossSellingSessionProductCollection
@@ -23,16 +22,6 @@ class CrossSellingSessionEntity extends Entity
     public function setSessionProducts(?CrossSellingSessionProductCollection $sessionProducts): void
     {
         $this->sessionProducts = $sessionProducts;
-    }
-
-    public function getProcessed(): bool
-    {
-        return $this->processed;
-    }
-
-    public function setProcessed(bool $processed): void
-    {
-        $this->processed = $processed;
     }
 
     public function getToken(): string
