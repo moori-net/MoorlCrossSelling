@@ -40,7 +40,7 @@
                 </option>
                 <option>
                     <id>disabled</id>
-                    <name>Console: bin/console moorl:cross-selling:create-relations [-t] [-f]</name>
+                    <name>Console: bin/console moorl:cross-selling:create-relations</name>
                 </option>
             </options>
             <defaultValue>scheduled</defaultValue>
@@ -58,7 +58,7 @@
                 </option>
                 <option>
                     <id>disabled</id>
-                    <name>Console: bin/console moorl:cross-selling:update-products [-t] [-f]</name>
+                    <name>Console: bin/console moorl:cross-selling:update-products</name>
                 </option>
             </options>
             <defaultValue>indexer</defaultValue>

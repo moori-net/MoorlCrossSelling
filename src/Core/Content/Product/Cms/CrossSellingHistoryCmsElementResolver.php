@@ -33,12 +33,18 @@ class CrossSellingHistoryCmsElementResolver extends ProductSliderCmsElementResol
         $config = $slot->getFieldConfig();
 
         $productConfig = $config->get('products');
+        if (!$productConfig instanceof FieldConfig) {
+            return null;
+        }
         $productConfig->assign([
             'source' => FieldConfig::SOURCE_STATIC,
             'value' => $this->crossSellingService->getProductHistoryIds($resolverContext->getSalesChannelContext()),
         ]);
 
         $titleConfig = $config->get('title');
+        if (!$titleConfig instanceof FieldConfig) {
+            return null;
+        }
         $titleConfig->assign([
             'source' => FieldConfig::SOURCE_STATIC,
             'value' => $this->crossSellingService->getProductCrossSellingTranslation(
