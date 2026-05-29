@@ -1,0 +1,23 @@
+{
+  "base": "/bundles/moorlcrossselling/administration/",
+  "entryPoints": {
+    "moorl-cross-selling": {
+      "css": [],
+      "dynamic": [],
+      "js": [
+        "/bundles/moorlcrossselling/administration/assets/moorl-cross-selling-fA5eGIcx.js"
+      ],
+      "legacy": false,
+      "preload": []
+    }
+  },
+  "legacy": false,
+  "metadatas": {},
+  "version": [
+    "7.1.0",
+    7,
+    1,
+    0
+  ],
+  "viteServer": null
+}
