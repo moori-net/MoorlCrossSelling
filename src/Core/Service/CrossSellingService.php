@@ -394,7 +394,7 @@ class CrossSellingService
             [$productAId, $productBId] = [$productBId, $productAId];
         }
 
-        $relationId = md5(sprintf("%s|%s", $productAId, $productBId));
+        $relationId = md5(sprintf("%s|%s|%s|%s", $productAId, $productBId, $type, $salesChannelId));
 
         if (isset($payload[CrossSellingRelationDefinition::ENTITY_NAME][$relationId])) {
             $payload[CrossSellingRelationDefinition::ENTITY_NAME][$relationId]['score']++;
