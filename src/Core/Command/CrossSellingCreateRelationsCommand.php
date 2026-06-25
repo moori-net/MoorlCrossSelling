@@ -34,10 +34,8 @@ class CrossSellingCreateRelationsCommand extends Command
         $io->writeln(sprintf("Creating relations from %d customer sessions...", $count));
         $io->newLine();
         $progressBar = $io->createProgressBar($count);
-        $page = 0;
         do {
-            $page++;
-            $step = $this->crossSellingService->createRelationsFromSessionTask($context, $page);
+            $step = $this->crossSellingService->createRelationsFromSessionTask($context);
             $progressBar->advance($step->getTotal());
         } while ($step->getIds());
         $progressBar->finish();
@@ -50,10 +48,8 @@ class CrossSellingCreateRelationsCommand extends Command
         $io->writeln(sprintf("Creating relations from %d orders...", $count));
         $io->newLine();
         $progressBar = $io->createProgressBar($count);
-        $page = 0;
         do {
-            $page++;
-            $step = $this->crossSellingService->createRelationsFromOrderTask($context, $page);
+            $step = $this->crossSellingService->createRelationsFromOrderTask($context);
             $progressBar->advance($step->getTotal());
         } while ($step->getIds());
         $progressBar->finish();
