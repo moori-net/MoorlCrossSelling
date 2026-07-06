@@ -20,6 +20,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Aggregation\Metric\CountAggregation;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\AggregationResult\Metric\CountResult;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
@@ -97,15 +98,13 @@ class CrossSellingService
         $idSearchResult = $this->productRepository->searchIds($criteria, $context);
 
         $payload = $this->createEmptyPayload();
-        foreach ($idSearchResult->getIds() as $productId) {
-            $this->updateProduct($payload, $productId, $context);
-        }
+        $this->updateProducts($payload, $idSearchResult->getIds(), $context);
         $this->processPayload($payload, $context);
 
         return $idSearchResult;
     }
 
-    public function updateProduct(array &$payload, string $productId, Context $context): void
+    public function updateProducts(array &$payload, array $productIds, Context $context): void
     {
         $itemLimit = $this->systemConfigService->getInt('MoorlCrossSelling.config.itemLimit');
 
@@ -116,29 +115,55 @@ class CrossSellingService
 
         foreach ($types as $type) {
             $criteria = new Criteria();
-            $criteria->setLimit($itemLimit);
             $criteria->addFilter(new EqualsFilter('type', $type));
-            $criteria->addFilter(new OrFilter([
-                new EqualsFilter('productAId', $productId),
-                new EqualsFilter('productBId', $productId),
-            ]));
+            $criteria->addFilter(
+                new OrFilter([
+                    new EqualsAnyFilter('productAId', $productIds),
+                    new EqualsAnyFilter('productBId', $productIds),
+                ])
+            );
             $criteria->addSorting(new FieldSorting('score', FieldSorting::DESCENDING));
 
-            $crossSellingRelations = $this->crossSellingRelationRepository->search($criteria, $context)->getEntities();
-            if (!$crossSellingRelations instanceof CrossSellingRelationCollection || $crossSellingRelations->count() === 0) {
+            /** @var CrossSellingRelationCollection $relations */
+            $relations = $this->crossSellingRelationRepository
+                ->search($criteria, $context)
+                ->getEntities();
+
+            if ($relations->count() === 0) {
                 continue;
             }
 
-            $crossSellingId = md5(sprintf("%s|%s", $type, $productId));
+            foreach ($productIds as $productId) {
+                $productRelations = new CrossSellingRelationCollection();
 
-            $payload[ProductCrossSellingDefinition::ENTITY_NAME][$crossSellingId] = [
-                'id' => $crossSellingId,
-                'productId' => $productId,
-                'active' => true,
-                'type' => ProductCrossSellingDefinition::TYPE_PRODUCT_LIST,
-                'assignedProducts' => $crossSellingRelations->fetchAssignedProductsPayload($productId),
-                'translations' => $this->getProductCrossSellingTranslations($type),
-            ];
+                foreach ($relations as $relation) {
+                    if (
+                        $relation->getProductAId() === $productId ||
+                        $relation->getProductBId() === $productId
+                    ) {
+                        $productRelations->add($relation);
+
+                        if ($productRelations->count() >= $itemLimit) {
+                            break;
+                        }
+                    }
+                }
+
+                if ($productRelations->count() === 0) {
+                    continue;
+                }
+
+                $crossSellingId = md5(sprintf('%s|%s', $type, $productId));
+
+                $payload[ProductCrossSellingDefinition::ENTITY_NAME][$crossSellingId] = [
+                    'id' => $crossSellingId,
+                    'productId' => $productId,
+                    'active' => true,
+                    'type' => ProductCrossSellingDefinition::TYPE_PRODUCT_LIST,
+                    'assignedProducts' => $productRelations->fetchAssignedProductsPayload($productId),
+                    'translations' => $this->getProductCrossSellingTranslations($type),
+                ];
+            }
         }
     }
 
